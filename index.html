@@ -6,20 +6,20 @@
 <title>نظام المحاسبة الذكي</title>
 
 <style>
-body{margin:0;font-family:Arial;background:#f5f7fb}
+body{margin:0;font-family:Arial;background:#f4f7fb}
+header{background:#2563eb;color:#fff;padding:12px;display:flex;align-items:center;gap:10px}
+header img{height:50px;border-radius:8px}
 .container{padding:15px}
-.card{background:#fff;padding:12px;border-radius:12px;margin-bottom:10px}
+.card{background:#fff;padding:12px;border-radius:12px;margin-bottom:12px}
+.tabs{display:flex;gap:6px;padding:10px}
+.tab{padding:8px 12px;background:#fff;border-radius:10px;cursor:pointer}
+.tab.active{background:#111;color:#fff}
+.view{display:none}
+.view.active{display:block}
 button{padding:10px;border:none;border-radius:8px;background:#2563eb;color:#fff}
 input,select{padding:8px;border-radius:8px;border:1px solid #ccc;width:100%}
 table{width:100%;border-collapse:collapse}
 th,td{padding:8px;border-bottom:1px solid #ddd;text-align:center}
-header{background:#2563eb;color:#fff;padding:12px;display:flex;align-items:center;gap:10px}
-header img{height:50px;border-radius:8px}
-.tabs{display:flex;gap:5px;padding:10px}
-.tab{padding:8px 12px;background:#fff;border-radius:10px;cursor:pointer}
-.active{background:#111;color:#fff}
-.view{display:none}
-.view.active{display:block}
 </style>
 </head>
 
@@ -28,31 +28,27 @@ header img{height:50px;border-radius:8px}
 <header>
 <img id="logo" style="display:none">
 <input type="file" id="logoInput">
-<h3>النظام المالي</h3>
+<h3>نظام المحاسبة الذكي</h3>
 </header>
 
 <div class="tabs">
 <div class="tab active" onclick="showTab('home')">الرئيسية</div>
 <div class="tab" onclick="showTab('statement')">كشف الحساب</div>
+<div class="tab" onclick="showTab('projects')">تحليل المشاريع</div>
 </div>
 
 <div class="container">
 
 <div id="home" class="view active">
 <div class="card">
-<h3>ملخص</h3>
-<p>نظام محاسبة متكامل</p>
+<h3>لوحة التحكم</h3>
+<p>نظام مالي متكامل + تقارير + تحليل</p>
 </div>
 </div>
 <div id="statement" class="view">
 
 <div class="card">
 <h3>كشف حساب</h3>
-
-<select id="type">
-<option value="project">مشروع</option>
-<option value="account">حساب</option>
-</select>
 
 <input type="date" id="from">
 <input type="date" id="to">
@@ -66,7 +62,7 @@ header img{height:50px;border-radius:8px}
 
 <div style="display:flex;justify-content:space-between">
 <img id="printLogo" style="height:60px;display:none">
-<h3>كشف حساب</h3>
+<h3>كشف حساب محاسبي</h3>
 </div>
 
 <div id="opening"></div>
@@ -90,22 +86,47 @@ header img{height:50px;border-radius:8px}
 </div>
 
 </div>
+<div id="projects" class="view">
+
+<div class="card">
+<h3>تحليل المشاريع</h3>
+
+<table>
+<thead>
+<tr>
+<th>المشروع</th>
+<th>الإيراد</th>
+<th>المصروف</th>
+<th>الصافي</th>
+</tr>
+</thead>
+
+<tbody id="projectTable"></tbody>
+</table>
+
+</div>
+
+</div>
 <script>
 
 // بيانات تجريبية
 let entries = [
-{date:"2026-01-01",type:"راس المال",amount:10000},
-{date:"2026-01-02",type:"مصروف",amount:-2000},
-{date:"2026-01-03",type:"ايراد",amount:5000}
+{project:"A",date:"2026-01-01",type:"راس المال",amount:10000},
+{project:"A",date:"2026-01-02",type:"مصروف",amount:-2000},
+{project:"A",date:"2026-01-03",type:"ايراد",amount:5000},
+{project:"B",date:"2026-01-04",type:"مصروف",amount:-3000},
+{project:"B",date:"2026-01-05",type:"ايراد",amount:8000}
 ]
 
-// تغيير التبويب
+// تبويب
 function showTab(id){
 document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"))
+document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"))
 document.getElementById(id).classList.add("active")
+event.target.classList.add("active")
 }
 
-// توليد التقرير
+// كشف حساب
 function generate(){
 let from=document.getElementById("from").value
 let to=document.getElementById("to").value
@@ -131,8 +152,7 @@ rows+=`
 <td>${e.amount<0?Math.abs(e.amount):""}</td>
 <td>${e.amount>0?e.amount:""}</td>
 <td>${running}</td>
-</tr>
-`
+</tr>`
 }
 })
 
@@ -141,15 +161,32 @@ document.getElementById("closing").innerHTML="رصيد ختامي: "+running
 document.getElementById("data").innerHTML=rows
 }
 
-// PDF
-function printPDF(){
-let logo=localStorage.getItem("logo")
-if(logo){
-document.getElementById("printLogo").src=logo
-document.getElementById("printLogo").style.display="block"
+// تحليل المشاريع
+function loadProjects(){
+let map={}
+
+entries.forEach(e=>{
+if(!map[e.project]) map[e.project]={rev:0,exp:0}
+if(e.amount>0) map[e.project].rev+=e.amount
+else map[e.project].exp+=Math.abs(e.amount)
+})
+
+let html=""
+Object.keys(map).forEach(p=>{
+let net=map[p].rev-map[p].exp
+html+=`
+<tr>
+<td>${p}</td>
+<td>${map[p].rev}</td>
+<td>${map[p].exp}</td>
+<td>${net}</td>
+</tr>`
+})
+
+document.getElementById("projectTable").innerHTML=html
 }
-window.print()
-}
+
+loadProjects()
 
 // الشعار
 let input=document.getElementById("logoInput")
@@ -171,6 +208,16 @@ logo.style.display="block"
 }
 reader.readAsDataURL(file)
 })
+
+// PDF
+function printPDF(){
+let logo=localStorage.getItem("logo")
+if(logo){
+document.getElementById("printLogo").src=logo
+document.getElementById("printLogo").style.display="block"
+}
+window.print()
+}
 
 </script>
 
