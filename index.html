@@ -1,0 +1,981 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>نظام المحاسبة الذكي</title>
+  <meta name="theme-color" content="#155eef">
+  <link rel="manifest" href="manifest.json">
+  <style>
+    :root {
+      --bg:#f4f7fb; --card:#fff; --ink:#122033; --muted:#64748b; --line:#dbe4ee;
+      --brand:#155eef; --brand2:#0ea5e9; --good:#16a34a; --bad:#dc2626; --warn:#b7791f;
+      --shadow:0 10px 30px rgba(16,24,40,.08); --radius:18px;
+    }
+    * { box-sizing:border-box; }
+    body {
+      margin:0; font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Tahoma,Arial,sans-serif;
+      color:var(--ink); background:linear-gradient(180deg,#edf4ff 0,#f4f7fb 180px,#f4f7fb 100%);
+    }
+    .app { max-width:1200px; margin:0 auto; padding:14px 14px 80px; }
+    .hero {
+      background:linear-gradient(135deg,var(--brand),var(--brand2));
+      color:#fff; border-radius:26px; padding:18px; box-shadow:var(--shadow);
+    }
+    .hero h1 { margin:0 0 8px; font-size:1.35rem; }
+    .hero p { margin:0; line-height:1.7; opacity:.96; }
+    .top-actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+    .tabs { display:flex; gap:8px; overflow:auto; padding:8px 2px 2px; margin:14px 0; }
+    .tab {
+      border:none; background:#fff; color:var(--ink); padding:10px 14px; border-radius:999px;
+      box-shadow:var(--shadow); font-weight:800; white-space:nowrap; cursor:pointer;
+    }
+    .tab.active { background:var(--ink); color:#fff; }
+    .view { display:none; }
+    .view.active { display:block; }
+    .grid { display:grid; gap:12px; }
+    .cards { grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); }
+    .two { grid-template-columns:1.1fr .9fr; }
+    .three { grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); }
+    .card {
+      background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+      box-shadow:var(--shadow); padding:14px;
+    }
+    .section-title { margin:0 0 10px; font-size:1.04rem; font-weight:900; }
+    .metric .label { color:var(--muted); font-size:.88rem; margin-bottom:6px; }
+    .metric .value { font-size:1.3rem; font-weight:900; letter-spacing:-.02em; }
+    .metric.good .value { color:var(--good); }
+    .metric.bad .value { color:var(--bad); }
+    .hint, .muted { color:var(--muted); font-size:.86rem; }
+    .toolbar, .form-grid, .actions { display:flex; gap:8px; flex-wrap:wrap; }
+    .toolbar, .form-grid { margin-bottom:10px; }
+    input, select, textarea, button {
+      font:inherit;
+    }
+    .toolbar input, .toolbar select, .form-grid input, .form-grid select, .form-grid textarea {
+      flex:1 1 140px; min-width:120px; width:100%;
+      border:1px solid var(--line); border-radius:12px; background:#fff; padding:10px 12px;
+    }
+    textarea { min-height:90px; resize:vertical; }
+    button, .btn {
+      border:none; border-radius:12px; padding:10px 12px; cursor:pointer; font-weight:800;
+      background:var(--brand); color:#fff; text-decoration:none; display:inline-flex; align-items:center; justify-content:center;
+    }
+    button.secondary, .btn.secondary { background:#eff6ff; color:var(--brand); border:1px solid #c7ddff; }
+    button.ghost { background:#fff; color:var(--ink); border:1px solid var(--line); }
+    button.danger { background:#fff1f2; color:var(--bad); border:1px solid #fecdd3; }
+    .pill {
+      display:inline-flex; align-items:center; gap:6px; background:#eef4ff; color:var(--brand);
+      padding:4px 10px; border-radius:999px; font-size:.8rem; font-weight:800;
+    }
+    .pill.good { background:#ecfdf3; color:var(--good); }
+    .pill.warn { background:#fff7e8; color:var(--warn); }
+    .pill.dark { background:#e2e8f0; color:#334155; }
+    table { width:100%; border-collapse:collapse; }
+    th, td { padding:10px 8px; border-bottom:1px solid #edf2f7; text-align:right; vertical-align:top; font-size:.92rem; }
+    th { position:sticky; top:0; background:#fff; color:var(--muted); font-weight:900; }
+    .table-wrap { overflow:auto; max-height:70vh; border:1px solid var(--line); border-radius:16px; background:#fff; }
+    .notice {
+      background:#fff8e7; border:1px solid #f7d38b; color:#8a5a00;
+      border-radius:14px; padding:10px 12px; line-height:1.7; margin-bottom:12px;
+    }
+    .success {
+      display:none; background:#ecfdf3; color:#166534; border:1px solid #bbf7d0;
+      padding:10px 12px; border-radius:14px; margin-top:10px;
+    }
+    .empty { text-align:center; color:var(--muted); padding:18px; }
+    .login-screen {
+      max-width:480px; margin:40px auto; background:#fff; padding:18px; border-radius:24px;
+      border:1px solid var(--line); box-shadow:var(--shadow);
+    }
+    .login-screen h2 { margin-top:0; }
+    .small { font-size:.84rem; }
+    .footer { text-align:center; color:var(--muted); font-size:.82rem; margin-top:16px; }
+    .svg-chart {
+      width:100%; background:#fff; border:1px solid var(--line); border-radius:16px; padding:10px;
+    }
+    .split { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+    .install-note { margin-top:8px; }
+    @media (max-width:760px) {
+      .two { grid-template-columns:1fr; }
+      th, td { font-size:.84rem; padding:9px 7px; }
+    }
+  </style>
+</head>
+<body>
+<div id="loginRoot" class="app"></div>
+<div id="appRoot" class="app" style="display:none;"></div>
+
+<script>
+const baseData = {"generated_at": "2026-03-26 21:56", "overview": {"total_spent": 13683725.0, "revenue": 2650000.0, "net": -11033725.0, "shareholder_funding": 11130875.0}, "totals_by_type": {"payments": 12409238.0, "expenses": 1274487.0, "count": 470}, "projects": [{"project": "أبو عريضة", "operations": 6448812.0, "misc": 211255.0, "total": 6660067.0, "revenue": 2650000.0, "net": -4010067.0}, {"project": "الاكاديمية", "operations": 5930426.0, "misc": 380250.0, "total": 6310676.0, "revenue": 0.0, "net": -6310676.0}, {"project": "خارج الاكاديمية", "operations": 10000.0, "misc": 0.0, "total": 10000.0, "revenue": 0.0, "net": -10000.0}, {"project": "المكتب/الإدارة", "operations": 0.0, "misc": 682982.0, "total": 682982.0, "revenue": 0.0, "net": -682982.0}, {"project": "عمارات الرحاب", "operations": 20000.0, "misc": 0.0, "total": 20000.0, "revenue": 0.0, "net": -20000.0}], "entries": [{"date": "2025-12-27", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "اكرامي", "amount": 50000.0, "project": "الاكاديمية"}, {"date": "2025-12-28", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "اكرامي", "amount": 40000.0, "project": "الاكاديمية"}, {"date": "2025-12-29", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "اكرامي", "amount": 30000.0, "project": "الاكاديمية"}, {"date": "2025-12-30", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "اكرامي", "amount": 50000.0, "project": "الاكاديمية"}, {"date": "2025-12-31", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "اكرامي", "amount": 40000.0, "project": "الاكاديمية"}, {"date": "2026-01-01", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "اكرامي", "amount": 200000.0, "project": "الاكاديمية"}, {"date": "2026-01-03", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "اكرامي", "amount": 70000.0, "project": "الاكاديمية"}, {"date": "2026-01-04", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "اكرامي", "amount": 130000.0, "project": "الاكاديمية"}, {"date": "2026-01-08", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "اكرامي", "amount": 100000.0, "project": "الاكاديمية"}, {"date": "2026-01-09", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "اكرامي", "amount": 120000.0, "project": "الاكاديمية"}, {"date": "2026-01-14", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "اكرامي", "amount": 150000.0, "project": "الاكاديمية"}, {"date": "2026-01-18", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "اكرامي", "amount": 18000.0, "project": "الاكاديمية"}, {"date": "2026-01-20", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "اكرامي", "amount": 3216.0, "project": "الاكاديمية"}, {"date": "2026-01-25", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "اكرامي", "amount": 10000.0, "project": "الاكاديمية"}, {"date": "2026-02-05", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "اكرامي", "amount": 20000.0, "project": "الاكاديمية"}, {"date": "2026-02-12", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "اكرامي", "amount": 10000.0, "project": "الاكاديمية"}, {"date": "2025-12-30", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "رجب", "amount": 5000.0, "project": "الاكاديمية"}, {"date": "2025-12-31", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "رجب", "amount": 5000.0, "project": "الاكاديمية"}, {"date": "2026-01-01", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "رجب", "amount": 1000.0, "project": "الاكاديمية"}, {"date": "2026-01-03", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "رجب", "amount": 5000.0, "project": "الاكاديمية"}, {"date": "2026-01-05", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "رجب", "amount": 5000.0, "project": "الاكاديمية"}, {"date": "2026-01-08", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "رجب", "amount": 10000.0, "project": "الاكاديمية"}, {"date": "2026-01-10", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "رجب", "amount": 5000.0, "project": "الاكاديمية"}, {"date": "2026-01-11", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "رجب", "amount": 5000.0, "project": "الاكاديمية"}, {"date": "2026-01-12", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "رجب", "amount": 5000.0, "project": "الاكاديمية"}, {"date": "2026-01-13", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "رجب", "amount": 5000.0, "project": "الاكاديمية"}, {"date": "2026-01-14", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "رجب", "amount": 15000.0, "project": "الاكاديمية"}, {"date": "2026-01-19", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "رجب", "amount": 5000.0, "project": "الاكاديمية"}, {"date": "2026-01-20", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "رجب", "amount": 5000.0, "project": "الاكاديمية"}, {"date": "2026-01-21", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "رجب", "amount": 5000.0, "project": "الاكاديمية"}, {"date": "2026-01-22", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "رجب", "amount": 10000.0, "project": "الاكاديمية"}, {"date": "2026-01-24", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "رجب", "amount": 5000.0, "project": "الاكاديمية"}, {"date": "2026-01-25", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "رجب", "amount": 5000.0, "project": "الاكاديمية"}, {"date": "2026-01-26", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "رجب", "amount": 5000.0, "project": "الاكاديمية"}, {"date": "2026-01-27", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "رجب", "amount": 5000.0, "project": "الاكاديمية"}, {"date": "2026-01-28", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "رجب", "amount": 5000.0, "project": "الاكاديمية"}, {"date": "2026-01-29", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "رجب", "amount": 10000.0, "project": "الاكاديمية"}, {"date": "2026-02-01", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "رجب", "amount": 10000.0, "project": "الاكاديمية"}, {"date": "2026-02-02", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "رجب", "amount": 5000.0, "project": "الاكاديمية"}, {"date": "2026-02-03", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "رجب", "amount": 5000.0, "project": "الاكاديمية"}, {"date": "2026-02-04", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "رجب", "amount": 5960.0, "project": "الاكاديمية"}, {"date": "2026-02-05", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "رجب", "amount": 30000.0, "project": "الاكاديمية"}, {"date": "2026-02-07", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "رجب", "amount": 5000.0, "project": "الاكاديمية"}, {"date": "2026-02-09", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "رجب", "amount": 5000.0, "project": "الاكاديمية"}, {"date": "2026-02-10", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "رجب", "amount": 5000.0, "project": "الاكاديمية"}, {"date": "2026-02-12", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "رجب", "amount": 20000.0, "project": "الاكاديمية"}, {"date": "2026-02-14", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "رجب", "amount": 1000.0, "project": "الاكاديمية"}, {"date": "2026-02-15", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "رجب", "amount": 5000.0, "project": "الاكاديمية"}, {"date": "2026-02-18", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "رجب", "amount": 18000.0, "project": "الاكاديمية"}, {"date": "2026-02-23", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "رجب", "amount": 5000.0, "project": "الاكاديمية"}, {"date": "2026-02-24", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "رجب", "amount": 2000.0, "project": "الاكاديمية"}, {"date": "2026-02-28", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "رجب", "amount": 5000.0, "project": "الاكاديمية"}, {"date": "2026-01-13", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "محمد صلاح", "amount": 73000.0, "project": "الاكاديمية"}, {"date": "2026-01-14", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "محمد صلاح", "amount": 70000.0, "project": "الاكاديمية"}, {"date": "2026-01-15", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "محمد صلاح", "amount": 30000.0, "project": "الاكاديمية"}, {"date": "2026-01-16", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "محمد صلاح", "amount": 80000.0, "project": "الاكاديمية"}, {"date": "2026-01-17", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "محمد صلاح", "amount": 20000.0, "project": "الاكاديمية"}, {"date": "2026-01-18", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "محمد صلاح", "amount": 140000.0, "project": "الاكاديمية"}, {"date": "2026-01-19", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "محمد صلاح", "amount": 60000.0, "project": "الاكاديمية"}, {"date": "2026-01-20", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "محمد صلاح", "amount": 107000.0, "project": "الاكاديمية"}, {"date": "2026-01-21", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "محمد صلاح", "amount": 107000.0, "project": "الاكاديمية"}, {"date": "2026-01-27", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "محمد صلاح", "amount": 120000.0, "project": "الاكاديمية"}, {"date": "2026-01-28", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "محمد صلاح", "amount": 200000.0, "project": "الاكاديمية"}, {"date": "2026-01-29", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "محمد صلاح", "amount": 240000.0, "project": "الاكاديمية"}, {"date": "2026-01-30", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "محمد صلاح", "amount": 8500.0, "project": "الاكاديمية"}, {"date": "2026-02-01", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "محمد صلاح", "amount": 100000.0, "project": "الاكاديمية"}, {"date": "2026-02-02", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "محمد صلاح", "amount": 122000.0, "project": "الاكاديمية"}, {"date": "2026-02-03", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "محمد صلاح", "amount": 170000.0, "project": "الاكاديمية"}, {"date": "2026-02-04", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "محمد صلاح", "amount": 100000.0, "project": "الاكاديمية"}, {"date": "2026-02-05", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "محمد صلاح", "amount": 187300.0, "project": "الاكاديمية"}, {"date": "2026-02-06", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "محمد صلاح", "amount": 85700.0, "project": "الاكاديمية"}, {"date": "2026-02-07", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "محمد صلاح", "amount": 5000.0, "project": "الاكاديمية"}, {"date": "2026-02-08", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "محمد صلاح", "amount": 50000.0, "project": "الاكاديمية"}, {"date": "2026-02-09", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "محمد صلاح", "amount": 30000.0, "project": "الاكاديمية"}, {"date": "2026-02-11", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "محمد صلاح", "amount": 159000.0, "project": "الاكاديمية"}, {"date": "2026-02-12", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "محمد صلاح", "amount": 67500.0, "project": "الاكاديمية"}, {"date": "2026-02-13", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "محمد صلاح", "amount": 180000.0, "project": "الاكاديمية"}, {"date": "2026-02-16", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "محمد صلاح", "amount": 60000.0, "project": "الاكاديمية"}, {"date": "2026-02-24", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "محمد صلاح", "amount": 36000.0, "project": "الاكاديمية"}, {"date": "2026-02-25", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "محمد صلاح", "amount": 47600.0, "project": "الاكاديمية"}, {"date": "2026-02-26", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "محمد صلاح", "amount": 250000.0, "project": "الاكاديمية"}, {"date": "2026-01-11", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "علي يوسف", "amount": 4000.0, "project": "الاكاديمية"}, {"date": "2026-01-12", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "علي يوسف", "amount": 8000.0, "project": "الاكاديمية"}, {"date": "2026-01-13", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "علي يوسف", "amount": 7000.0, "project": "الاكاديمية"}, {"date": "2026-01-28", "description": "دفعه اعمال تشطيبات", "type": "دفعات", "work": "تشطيبات", "account": "انور", "amount": 90000.0, "project": "الاكاديمية"}, {"date": "2026-01-29", "description": "دفعه اعمال تشطيبات", "type": "دفعات", "work": "تشطيبات", "account": "انور", "amount": 40000.0, "project": "الاكاديمية"}, {"date": "2026-02-05", "description": "دفعه اعمال تشطيبات", "type": "دفعات", "work": "تشطيبات", "account": "انور", "amount": 50000.0, "project": "الاكاديمية"}, {"date": "2026-02-10", "description": "دفعه اعمال تشطيبات", "type": "دفعات", "work": "تشطيبات", "account": "انور", "amount": 15000.0, "project": "الاكاديمية"}, {"date": "2026-02-14", "description": "دفعه اعمال تشطيبات", "type": "دفعات", "work": "تشطيبات", "account": "انور", "amount": 50000.0, "project": "الاكاديمية"}, {"date": "2026-02-18", "description": "دفعه اعمال تشطيبات", "type": "دفعات", "work": "تشطيبات", "account": "انور", "amount": 50000.0, "project": "الاكاديمية"}, {"date": "2026-02-19", "description": "دفعه اعمال تشطيبات", "type": "دفعات", "work": "تشطيبات", "account": "انور", "amount": 135000.0, "project": "الاكاديمية"}, {"date": "2026-02-23", "description": "دفعه اعمال تشطيبات", "type": "دفعات", "work": "تشطيبات", "account": "انور", "amount": 50000.0, "project": "الاكاديمية"}, {"date": "2026-02-25", "description": "دفعه اعمال تشطيبات", "type": "دفعات", "work": "تشطيبات", "account": "انور", "amount": 10000.0, "project": "الاكاديمية"}, {"date": "2026-02-26", "description": "دفعه اعمال تشطيبات", "type": "دفعات", "work": "تشطيبات", "account": "انور", "amount": 149150.0, "project": "الاكاديمية"}, {"date": "2026-02-27", "description": "دفعه اعمال تشطيبات", "type": "دفعات", "work": "تشطيبات", "account": "انور", "amount": 6100.0, "project": "الاكاديمية"}, {"date": "2026-01-03", "description": "دفعه عمال حفر&نقل", "type": "دفعات", "work": "حفر&نقل", "account": "عبدالله", "amount": 50000.0, "project": "أبو عريضة"}, {"date": "2026-01-05", "description": "دفعه عمال حفر&نقل", "type": "دفعات", "work": "حفر&نقل", "account": "عبدالله", "amount": 100000.0, "project": "أبو عريضة"}, {"date": "2026-01-08", "description": "دفعه عمال حفر&نقل", "type": "دفعات", "work": "حفر&نقل", "account": "عبدالله", "amount": 50000.0, "project": "أبو عريضة"}, {"date": "2026-01-11", "description": "دفعه عمال حفر&نقل", "type": "دفعات", "work": "حفر&نقل", "account": "عبدالله", "amount": 60000.0, "project": "أبو عريضة"}, {"date": "2026-01-12", "description": "دفعه عمال حفر&نقل", "type": "دفعات", "work": "حفر&نقل", "account": "عبدالله", "amount": 50000.0, "project": "أبو عريضة"}, {"date": "2026-01-14", "description": "دفعه عمال حفر&نقل", "type": "دفعات", "work": "حفر&نقل", "account": "عبدالله", "amount": 70000.0, "project": "أبو عريضة"}, {"date": "2026-01-15", "description": "دفعه عمال حفر&نقل", "type": "دفعات", "work": "حفر&نقل", "account": "عبدالله", "amount": 50000.0, "project": "أبو عريضة"}, {"date": "2026-01-17", "description": "دفعه عمال حفر&نقل", "type": "دفعات", "work": "حفر&نقل", "account": "عبدالله", "amount": 15000.0, "project": "أبو عريضة"}, {"date": "2026-01-18", "description": "دفعه عمال حفر&نقل", "type": "دفعات", "work": "حفر&نقل", "account": "عبدالله", "amount": 100000.0, "project": "أبو عريضة"}, {"date": "2026-01-19", "description": "دفعه عمال حفر&نقل", "type": "دفعات", "work": "حفر&نقل", "account": "عبدالله", "amount": 50000.0, "project": "أبو عريضة"}, {"date": "2026-01-20", "description": "دفعه عمال حفر&نقل", "type": "دفعات", "work": "حفر&نقل", "account": "عبدالله", "amount": 50000.0, "project": "أبو عريضة"}, {"date": "2026-01-21", "description": "دفعه عمال حفر&نقل", "type": "دفعات", "work": "حفر&نقل", "account": "عبدالله", "amount": 39000.0, "project": "أبو عريضة"}, {"date": "2026-01-22", "description": "دفعه عمال حفر&نقل", "type": "دفعات", "work": "حفر&نقل", "account": "عبدالله", "amount": 50000.0, "project": "أبو عريضة"}, {"date": "2026-01-24", "description": "دفعه عمال حفر&نقل", "type": "دفعات", "work": "حفر&نقل", "account": "عبدالله", "amount": 100000.0, "project": "أبو عريضة"}, {"date": "2026-01-25", "description": "دفعه عمال حفر&نقل", "type": "دفعات", "work": "حفر&نقل", "account": "عبدالله", "amount": 20000.0, "project": "أبو عريضة"}, {"date": "2026-01-26", "description": "دفعه عمال حفر&نقل", "type": "دفعات", "work": "حفر&نقل", "account": "عبدالله", "amount": 100000.0, "project": "أبو عريضة"}, {"date": "2026-01-27", "description": "دفعه عمال حفر&نقل", "type": "دفعات", "work": "حفر&نقل", "account": "عبدالله", "amount": 100000.0, "project": "أبو عريضة"}, {"date": "2026-01-28", "description": "دفعه عمال حفر&نقل", "type": "دفعات", "work": "حفر&نقل", "account": "عبدالله", "amount": 50000.0, "project": "أبو عريضة"}, {"date": "2026-01-29", "description": "دفعه عمال حفر&نقل", "type": "دفعات", "work": "حفر&نقل", "account": "عبدالله", "amount": 315000.0, "project": "أبو عريضة"}, {"date": "2026-01-31", "description": "دفعه عمال حفر&نقل", "type": "دفعات", "work": "حفر&نقل", "account": "عبدالله", "amount": 30000.0, "project": "أبو عريضة"}, {"date": "2026-02-02", "description": "دفعه عمال حفر&نقل", "type": "دفعات", "work": "حفر&نقل", "account": "عبدالله", "amount": 100000.0, "project": "أبو عريضة"}, {"date": "2026-02-03", "description": "دفعه عمال حفر&نقل", "type": "دفعات", "work": "حفر&نقل", "account": "عبدالله", "amount": 95000.0, "project": "أبو عريضة"}, {"date": "2026-02-04", "description": "دفعه عمال حفر&نقل", "type": "دفعات", "work": "حفر&نقل", "account": "عبدالله", "amount": 150000.0, "project": "أبو عريضة"}, {"date": "2026-02-05", "description": "دفعه عمال حفر&نقل", "type": "دفعات", "work": "حفر&نقل", "account": "عبدالله", "amount": 300000.0, "project": "أبو عريضة"}, {"date": "2026-02-06", "description": "دفعه عمال حفر&نقل", "type": "دفعات", "work": "حفر&نقل", "account": "عبدالله", "amount": 100000.0, "project": "أبو عريضة"}, {"date": "2026-02-08", "description": "دفعه عمال حفر&نقل", "type": "دفعات", "work": "حفر&نقل", "account": "عبدالله", "amount": 50000.0, "project": "أبو عريضة"}, {"date": "2026-02-09", "description": "دفعه عمال حفر&نقل", "type": "دفعات", "work": "حفر&نقل", "account": "عبدالله", "amount": 50000.0, "project": "أبو عريضة"}, {"date": "2026-02-10", "description": "دفعه عمال حفر&نقل", "type": "دفعات", "work": "حفر&نقل", "account": "عبدالله", "amount": 150000.0, "project": "أبو عريضة"}, {"date": "2026-02-11", "description": "دفعه عمال حفر&نقل", "type": "دفعات", "work": "حفر&نقل", "account": "عبدالله", "amount": 150000.0, "project": "أبو عريضة"}, {"date": "2026-02-12", "description": "دفعه عمال حفر&نقل", "type": "دفعات", "work": "حفر&نقل", "account": "عبدالله", "amount": 170000.0, "project": "أبو عريضة"}, {"date": "2026-02-14", "description": "دفعه عمال حفر&نقل", "type": "دفعات", "work": "حفر&نقل", "account": "عبدالله", "amount": 30000.0, "project": "أبو عريضة"}, {"date": "2026-02-15", "description": "دفعه عمال حفر&نقل", "type": "دفعات", "work": "حفر&نقل", "account": "عبدالله", "amount": 30000.0, "project": "أبو عريضة"}, {"date": "2026-02-16", "description": "دفعه عمال حفر&نقل", "type": "دفعات", "work": "حفر&نقل", "account": "عبدالله", "amount": 300000.0, "project": "أبو عريضة"}, {"date": "2026-02-18", "description": "دفعه عمال حفر&نقل", "type": "دفعات", "work": "حفر&نقل", "account": "عبدالله", "amount": 100000.0, "project": "أبو عريضة"}, {"date": "2026-02-19", "description": "دفعه عمال حفر&نقل", "type": "دفعات", "work": "حفر&نقل", "account": "عبدالله", "amount": 20000.0, "project": "أبو عريضة"}, {"date": "2026-02-20", "description": "دفعه عمال حفر&نقل", "type": "دفعات", "work": "حفر&نقل", "account": "عبدالله", "amount": 120000.0, "project": "أبو عريضة"}, {"date": "2026-02-22", "description": "دفعه عمال حفر&نقل", "type": "دفعات", "work": "حفر&نقل", "account": "عبدالله", "amount": 100000.0, "project": "أبو عريضة"}, {"date": "2026-02-23", "description": "دفعه عمال حفر&نقل", "type": "دفعات", "work": "حفر&نقل", "account": "عبدالله", "amount": 65000.0, "project": "أبو عريضة"}, {"date": "2026-02-25", "description": "دفعه عمال حفر&نقل", "type": "دفعات", "work": "حفر&نقل", "account": "عبدالله", "amount": 50000.0, "project": "أبو عريضة"}, {"date": "2026-02-26", "description": "دفعه عمال حفر&نقل", "type": "دفعات", "work": "حفر&نقل", "account": "عبدالله", "amount": 360000.0, "project": "أبو عريضة"}, {"date": "2026-02-27", "description": "دفعه عمال حفر&نقل", "type": "دفعات", "work": "حفر&نقل", "account": "عبدالله", "amount": 35000.0, "project": "أبو عريضة"}, {"date": "2026-02-28", "description": "دفعه عمال حفر&نقل", "type": "دفعات", "work": "حفر&نقل", "account": "عبدالله", "amount": 50000.0, "project": "أبو عريضة"}, {"date": "2026-01-10", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "عماد صفوت", "amount": 4000.0, "project": "أبو عريضة"}, {"date": "2026-01-11", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "عماد صفوت", "amount": 4000.0, "project": "أبو عريضة"}, {"date": "2026-01-12", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "عماد صفوت", "amount": 4000.0, "project": "أبو عريضة"}, {"date": "2025-12-31", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "أبو رحمة", "amount": 4000.0, "project": "أبو عريضة"}, {"date": "2026-01-01", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "أبو رحمة", "amount": 19000.0, "project": "أبو عريضة"}, {"date": "2026-01-02", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "أبو رحمة", "amount": 10000.0, "project": "أبو عريضة"}, {"date": "2026-01-03", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "أبو رحمة", "amount": 20000.0, "project": "أبو عريضة"}, {"date": "2026-01-04", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "أبو رحمة", "amount": 15000.0, "project": "أبو عريضة"}, {"date": "2026-01-05", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "أبو رحمة", "amount": 15000.0, "project": "أبو عريضة"}, {"date": "2026-01-06", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "أبو رحمة", "amount": 10000.0, "project": "أبو عريضة"}, {"date": "2026-01-07", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "أبو رحمة", "amount": 30000.0, "project": "أبو عريضة"}, {"date": "2026-01-08", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "أبو رحمة", "amount": 10000.0, "project": "أبو عريضة"}, {"date": "2026-01-09", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "أبو رحمة", "amount": 10000.0, "project": "أبو عريضة"}, {"date": "2026-01-10", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "أبو رحمة", "amount": 20000.0, "project": "أبو عريضة"}, {"date": "2026-01-14", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "أبو رحمة", "amount": 10000.0, "project": "أبو عريضة"}, {"date": "2026-01-15", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "أبو رحمة", "amount": 40000.0, "project": "أبو عريضة"}, {"date": "2026-01-18", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "أبو رحمة", "amount": 20000.0, "project": "أبو عريضة"}, {"date": "2026-01-21", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "أبو رحمة", "amount": 30000.0, "project": "أبو عريضة"}, {"date": "2026-01-22", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "أبو رحمة", "amount": 45000.0, "project": "أبو عريضة"}, {"date": "2026-02-25", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "أبو رحمة", "amount": 500.0, "project": "أبو عريضة"}, {"date": "2025-12-29", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "علي يوسف", "amount": 26000.0, "project": "أبو عريضة"}, {"date": "2025-12-30", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "علي يوسف", "amount": 45000.0, "project": "أبو عريضة"}, {"date": "2026-01-01", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "علي يوسف", "amount": 4000.0, "project": "أبو عريضة"}, {"date": "2026-01-03", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "علي يوسف", "amount": 40000.0, "project": "أبو عريضة"}, {"date": "2026-01-05", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "علي يوسف", "amount": 40000.0, "project": "أبو عريضة"}, {"date": "2026-01-07", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "علي يوسف", "amount": 20000.0, "project": "أبو عريضة"}, {"date": "2026-01-08", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "علي يوسف", "amount": 75000.0, "project": "أبو عريضة"}, {"date": "2026-01-10", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "علي يوسف", "amount": 40000.0, "project": "أبو عريضة"}, {"date": "2026-01-12", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "علي يوسف", "amount": 30000.0, "project": "أبو عريضة"}, {"date": "2026-01-15", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "علي يوسف", "amount": 90000.0, "project": "أبو عريضة"}, {"date": "2026-01-19", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "علي يوسف", "amount": 15000.0, "project": "أبو عريضة"}, {"date": "2026-01-21", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "علي يوسف", "amount": 30000.0, "project": "أبو عريضة"}, {"date": "2026-01-22", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "علي يوسف", "amount": 100000.0, "project": "أبو عريضة"}, {"date": "2026-02-05", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "علي يوسف", "amount": 10000.0, "project": "أبو عريضة"}, {"date": "2026-01-04", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "ماهر", "amount": 10000.0, "project": "أبو عريضة"}, {"date": "2026-01-06", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "ماهر", "amount": 20000.0, "project": "أبو عريضة"}, {"date": "2026-01-07", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "ماهر", "amount": 10000.0, "project": "أبو عريضة"}, {"date": "2026-01-08", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "ماهر", "amount": 10000.0, "project": "أبو عريضة"}, {"date": "2026-01-10", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "ماهر", "amount": 20000.0, "project": "أبو عريضة"}, {"date": "2026-01-12", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "ماهر", "amount": 20000.0, "project": "أبو عريضة"}, {"date": "2026-01-14", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "ماهر", "amount": 10000.0, "project": "أبو عريضة"}, {"date": "2026-01-18", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "ماهر", "amount": 5000.0, "project": "أبو عريضة"}, {"date": "2026-01-20", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "ماهر", "amount": 12000.0, "project": "أبو عريضة"}, {"date": "2026-01-22", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "ماهر", "amount": 25000.0, "project": "أبو عريضة"}, {"date": "2026-01-24", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "ماهر", "amount": 10000.0, "project": "أبو عريضة"}, {"date": "2026-01-25", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "ماهر", "amount": 15425.0, "project": "أبو عريضة"}, {"date": "2026-01-05", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "محمود فراج", "amount": 15000.0, "project": "أبو عريضة"}, {"date": "2026-01-07", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "محمود فراج", "amount": 5000.0, "project": "أبو عريضة"}, {"date": "2026-01-08", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "محمود فراج", "amount": 10000.0, "project": "أبو عريضة"}, {"date": "2026-01-27", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "محمود فراج", "amount": 9950.0, "project": "أبو عريضة"}, {"date": "2026-01-14", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "علاء", "amount": 7225.0, "project": "أبو عريضة"}, {"date": "2026-01-03", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "عماد صفوت", "amount": 5000.0, "project": "أبو عريضة"}, {"date": "2026-01-04", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "عماد صفوت", "amount": 5000.0, "project": "أبو عريضة"}, {"date": "2026-01-05", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "عماد صفوت", "amount": 10000.0, "project": "أبو عريضة"}, {"date": "2026-01-07", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "عماد صفوت", "amount": 5000.0, "project": "أبو عريضة"}, {"date": "2026-01-08", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "عماد صفوت", "amount": 10000.0, "project": "أبو عريضة"}, {"date": "2026-01-12", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "عماد صفوت", "amount": 10000.0, "project": "أبو عريضة"}, {"date": "2026-01-13", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "عماد صفوت", "amount": 4000.0, "project": "أبو عريضة"}, {"date": "2026-01-14", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "عماد صفوت", "amount": 5000.0, "project": "أبو عريضة"}, {"date": "2026-01-15", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "عماد صفوت", "amount": 18000.0, "project": "أبو عريضة"}, {"date": "2026-01-18", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "عماد صفوت", "amount": 10000.0, "project": "أبو عريضة"}, {"date": "2026-01-20", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "عماد صفوت", "amount": 10000.0, "project": "أبو عريضة"}, {"date": "2026-01-22", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "عماد صفوت", "amount": 40000.0, "project": "أبو عريضة"}, {"date": "2026-01-29", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "عماد صفوت", "amount": 10000.0, "project": "أبو عريضة"}, {"date": "2026-01-10", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "احمد يوسف", "amount": 5000.0, "project": "أبو عريضة"}, {"date": "2026-01-11", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "احمد يوسف", "amount": 5000.0, "project": "أبو عريضة"}, {"date": "2026-01-12", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "احمد يوسف", "amount": 4000.0, "project": "أبو عريضة"}, {"date": "2026-01-13", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "احمد يوسف", "amount": 4000.0, "project": "أبو عريضة"}, {"date": "2026-01-21", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "احمد يوسف", "amount": 25412.0, "project": "أبو عريضة"}, {"date": "2026-01-12", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "انور", "amount": 10000.0, "project": "أبو عريضة"}, {"date": "2026-01-15", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "انور", "amount": 110000.0, "project": "أبو عريضة"}, {"date": "2026-01-18", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "انور", "amount": 20000.0, "project": "أبو عريضة"}, {"date": "2026-01-23", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "انور", "amount": 80000.0, "project": "أبو عريضة"}, {"date": "2026-01-24", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "انور", "amount": 1000.0, "project": "أبو عريضة"}, {"date": "2026-01-10", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "احمد علي", "amount": 5000.0, "project": "أبو عريضة"}, {"date": "2026-01-10", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "جمال", "amount": 37000.0, "project": "أبو عريضة"}, {"date": "2025-12-28", "description": "اعمال رفع مساحى", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 8000.0, "project": "أبو عريضة"}, {"date": "2025-12-29", "description": "مساح", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 500.0, "project": "أبو عريضة"}, {"date": "2025-12-30", "description": "مواصلات مساح", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 500.0, "project": "أبو عريضة"}, {"date": "2025-12-31", "description": " مساح الاستشارى", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 1000.0, "project": "أبو عريضة"}, {"date": "2026-01-01", "description": "توقيع بلوكات", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 500.0, "project": "أبو عريضة"}, {"date": "2026-01-02", "description": "رفع مساحى", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 5000.0, "project": "أبو عريضة"}, {"date": "2026-01-03", "description": "رفع مساحى", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 8000.0, "project": "أبو عريضة"}, {"date": "2026-01-04", "description": "اكرامية مساح", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 400.0, "project": "أبو عريضة"}, {"date": "2025-12-28", "description": "مصطفى ابو عريضه", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 10000.0, "project": "أبو عريضة"}, {"date": "2025-12-29", "description": "مصطفى ابو عريضه", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 50000.0, "project": "أبو عريضة"}, {"date": "2025-12-30", "description": "اكرامية حفارات", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 800.0, "project": "أبو عريضة"}, {"date": "2025-12-31", "description": "اكرامية حفارات", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 800.0, "project": "أبو عريضة"}, {"date": "2026-01-01", "description": "اكرامية عربيات النقل", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 600.0, "project": "أبو عريضة"}, {"date": "2025-12-28", "description": "بنزين عربيه دوبل", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 1000.0, "project": "أبو عريضة"}, {"date": "2025-12-29", "description": "كساحة ابو رحمة", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 5000.0, "project": "أبو عريضة"}, {"date": "2025-12-30", "description": "كساحة ابو رحمة", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 5000.0, "project": "أبو عريضة"}, {"date": "2025-12-31", "description": "كساحة ابو رحمة", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 7000.0, "project": "أبو عريضة"}, {"date": "2026-01-01", "description": "كساحة محمود فراج", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 2600.0, "project": "أبو عريضة"}, {"date": "2026-01-02", "description": "كساحة عماد صفوت", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 6000.0, "project": "أبو عريضة"}, {"date": "2026-01-03", "description": "كساحة ماهر", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 10000.0, "project": "أبو عريضة"}, {"date": "2026-01-04", "description": "كساحة على ", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 6000.0, "project": "أبو عريضة"}, {"date": "2025-12-28", "description": "وجبات ضيافه و بوفيه", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 400.0, "project": "أبو عريضة"}, {"date": "2025-12-29", "description": "وجبات ضيافه و بوفيه", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 600.0, "project": "أبو عريضة"}, {"date": "2025-12-30", "description": "وجبات ضيافه و بوفيه", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 300.0, "project": "أبو عريضة"}, {"date": "2025-12-31", "description": "وجبات ضيافه و بوفيه", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 750.0, "project": "أبو عريضة"}, {"date": "2026-01-01", "description": "وجبات ضيافه و بوفيه", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 640.0, "project": "أبو عريضة"}, {"date": "2026-01-02", "description": "وجبات ضيافه و بوفيه", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 6000.0, "project": "أبو عريضة"}, {"date": "2026-01-03", "description": "وجبات ضيافه و بوفيه", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 1000.0, "project": "أبو عريضة"}, {"date": "2026-01-04", "description": "وجبات ضيافه و بوفيه", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 300.0, "project": "أبو عريضة"}, {"date": "2026-01-05", "description": "وجبات ضيافه و بوفيه", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 745.0, "project": "أبو عريضة"}, {"date": "2026-01-06", "description": "وجبات ضيافه و بوفيه", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 1300.0, "project": "أبو عريضة"}, {"date": "2026-01-07", "description": "وجبات ضيافه و بوفيه", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 300.0, "project": "أبو عريضة"}, {"date": "2026-01-08", "description": "وجبات ضيافه و بوفيه", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 400.0, "project": "أبو عريضة"}, {"date": "2026-01-09", "description": "وجبات ضيافه و بوفيه", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 20.0, "project": "أبو عريضة"}, {"date": "2026-01-10", "description": "وجبات ضيافه و بوفيه", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 300.0, "project": "أبو عريضة"}, {"date": "2026-01-11", "description": "وجبات ضيافه و بوفيه", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 6700.0, "project": "أبو عريضة"}, {"date": "2026-01-12", "description": "وجبات ضيافه و بوفيه", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 500.0, "project": "أبو عريضة"}, {"date": "2026-01-13", "description": "وجبات ضيافه و بوفيه", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 1500.0, "project": "أبو عريضة"}, {"date": "2025-12-28", "description": "حازم", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 1000.0, "project": "أبو عريضة"}, {"date": "2025-12-29", "description": "حاتم", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 2500.0, "project": "أبو عريضة"}, {"date": "2025-12-30", "description": "حازم", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 2500.0, "project": "أبو عريضة"}, {"date": "2025-12-31", "description": "حاتم", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 2500.0, "project": "أبو عريضة"}, {"date": "2026-01-01", "description": "حازم", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 2000.0, "project": "أبو عريضة"}, {"date": "2026-01-02", "description": "حازم", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 1200.0, "project": "أبو عريضة"}, {"date": "2026-01-03", "description": "حازم", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 600.0, "project": "أبو عريضة"}, {"date": "2026-01-04", "description": "حازم", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 400.0, "project": "أبو عريضة"}, {"date": "2026-01-05", "description": "محمد صفوت", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 25000.0, "project": "أبو عريضة"}, {"date": "2026-01-06", "description": "حازم", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 500.0, "project": "أبو عريضة"}, {"date": "2026-01-07", "description": "حازم +حاتم", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 12000.0, "project": "أبو عريضة"}, {"date": "2026-01-08", "description": "حازم", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 600.0, "project": "أبو عريضة"}, {"date": "2026-01-09", "description": "حازم +حاتم", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 10000.0, "project": "أبو عريضة"}, {"date": "2025-12-28", "description": "اعمال رفع مساحى", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 5000.0, "project": "الاكاديمية"}, {"date": "2025-12-29", "description": "مساح", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 1000.0, "project": "الاكاديمية"}, {"date": "2025-12-30", "description": "توقيع لبشه", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 6000.0, "project": "الاكاديمية"}, {"date": "2025-12-31", "description": " مساح", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 6000.0, "project": "الاكاديمية"}, {"date": "2026-01-01", "description": "اعمال رفع مساحى", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 30000.0, "project": "الاكاديمية"}, {"date": "2026-01-02", "description": "مساح", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 5000.0, "project": "الاكاديمية"}, {"date": "2026-01-03", "description": "رفع مساحى", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 8000.0, "project": "الاكاديمية"}, {"date": "2026-01-04", "description": "اكرامية مساح", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 400.0, "project": "الاكاديمية"}, {"date": "2025-12-28", "description": "مصطفى ابو عريضه", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 50000.0, "project": "الاكاديمية"}, {"date": "2025-12-29", "description": "اكرامية تنزيل اسمنت", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 2800.0, "project": "الاكاديمية"}, {"date": "2025-12-30", "description": "اكرامية عربيات النقل", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 2000.0, "project": "الاكاديمية"}, {"date": "2025-12-31", "description": "اكرامية عربيات النقل", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 600.0, "project": "الاكاديمية"}, {"date": "2026-01-01", "description": "اكرامية عربيات النقل", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 600.0, "project": "الاكاديمية"}, {"date": "2026-01-02", "description": "نولون اسمنت", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 675.0, "project": "الاكاديمية"}, {"date": "2026-01-03", "description": "مشمع تغطية الاسمنت", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 3000.0, "project": "الاكاديمية"}, {"date": "2026-01-04", "description": "مستندات تعاقد", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 100000.0, "project": "الاكاديمية"}, {"date": "2026-01-05", "description": "اسمنت ابيض", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 800.0, "project": "الاكاديمية"}, {"date": "2026-01-06", "description": "لودر - تسويات", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 3250.0, "project": "الاكاديمية"}, {"date": "2026-01-07", "description": "لودر - تسويات", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 1250.0, "project": "الاكاديمية"}, {"date": "2026-01-08", "description": "لودر - تسويات", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 1800.0, "project": "الاكاديمية"}, {"date": "2026-01-09", "description": "لودر - تسويات", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 2500.0, "project": "الاكاديمية"}, {"date": "2026-01-10", "description": "لودر - تسويات", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 2500.0, "project": "الاكاديمية"}, {"date": "2026-01-12", "description": "لودر بالخصم على صدام بقيمة 12480", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 10000.0, "project": "الاكاديمية"}, {"date": "2026-01-13", "description": "تشغيل حفار ولودر ابو رحمه - باقى 2000", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 12000.0, "project": "الاكاديمية"}, {"date": "2025-12-28", "description": "مواصلات", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 1500.0, "project": "الاكاديمية"}, {"date": "2025-12-29", "description": "ايجار ملاكى يومين", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 3500.0, "project": "الاكاديمية"}, {"date": "2025-12-30", "description": "مواصلات ان درايف", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 2000.0, "project": "الاكاديمية"}, {"date": "2025-12-31", "description": "رسوم الافراج عن عربيه نقل", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 20000.0, "project": "الاكاديمية"}, {"date": "2026-01-01", "description": "كساحة رجب", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 6000.0, "project": "الاكاديمية"}, {"date": "2026-01-02", "description": "ايجار عربيه موقع", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 20000.0, "project": "الاكاديمية"}, {"date": "2026-01-03", "description": "صيانة عربية موقع", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 10000.0, "project": "الاكاديمية"}, {"date": "2025-12-28", "description": "وجبات ضيافه و بوفيه", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 300.0, "project": "الاكاديمية"}, {"date": "2025-12-29", "description": "وجبات ضيافه و بوفيه", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 1500.0, "project": "الاكاديمية"}, {"date": "2025-12-30", "description": "وجبات ضيافه و بوفيه", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 2900.0, "project": "الاكاديمية"}, {"date": "2025-12-31", "description": "وجبات ضيافه و بوفيه", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 750.0, "project": "الاكاديمية"}, {"date": "2026-01-01", "description": "وجبات ضيافه و بوفيه", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 640.0, "project": "الاكاديمية"}, {"date": "2026-01-02", "description": "وجبات ضيافه و بوفيه", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 6000.0, "project": "الاكاديمية"}, {"date": "2026-01-03", "description": "وجبات ضيافه و بوفيه", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 1000.0, "project": "الاكاديمية"}, {"date": "2026-01-04", "description": "وجبات ضيافه و بوفيه", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 300.0, "project": "الاكاديمية"}, {"date": "2026-01-05", "description": "وجبات ضيافه و بوفيه", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 745.0, "project": "الاكاديمية"}, {"date": "2026-01-06", "description": "وجبات ضيافه و بوفيه", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 1300.0, "project": "الاكاديمية"}, {"date": "2026-01-07", "description": "وجبات ضيافه و بوفيه", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 300.0, "project": "الاكاديمية"}, {"date": "2026-01-08", "description": "وجبات ضيافه و بوفيه", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 400.0, "project": "الاكاديمية"}, {"date": "2026-01-09", "description": "وجبات ضيافه و بوفيه", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 20.0, "project": "الاكاديمية"}, {"date": "2026-01-10", "description": "وجبات ضيافه و بوفيه", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 300.0, "project": "الاكاديمية"}, {"date": "2026-01-11", "description": "وجبات ضيافه و بوفيه", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 6700.0, "project": "الاكاديمية"}, {"date": "2026-01-12", "description": "وجبات ضيافه و بوفيه", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 500.0, "project": "الاكاديمية"}, {"date": "2026-01-13", "description": "وجبات ضيافه و بوفيه", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 1500.0, "project": "الاكاديمية"}, {"date": "2025-12-28", "description": "راتب حسن الغفير", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 400.0, "project": "الاكاديمية"}, {"date": "2025-12-29", "description": "راتب حسن الغفير", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 1500.0, "project": "الاكاديمية"}, {"date": "2025-12-30", "description": "راتب حسن الغفير", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 1700.0, "project": "الاكاديمية"}, {"date": "2025-12-31", "description": "راتب حسن الغفير", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 1000.0, "project": "الاكاديمية"}, {"date": "2026-01-01", "description": "راتب حسن الغفير", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 400.0, "project": "الاكاديمية"}, {"date": "2026-01-02", "description": "راتب حسن الغفير", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 2000.0, "project": "الاكاديمية"}, {"date": "2026-01-03", "description": "راتب حسن الغفير", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 1000.0, "project": "الاكاديمية"}, {"date": "2026-01-04", "description": "راتب حسن الغفير", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 3000.0, "project": "الاكاديمية"}, {"date": "2026-01-05", "description": "راتب حسن الغفير", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 200.0, "project": "الاكاديمية"}, {"date": "2025-12-28", "description": "تشطيبات", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 20000.0, "project": "المكتب/الإدارة"}, {"date": "2025-12-29", "description": "توصيل فرش", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 1000.0, "project": "المكتب/الإدارة"}, {"date": "2025-12-30", "description": "احتياجات المكتب", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 2662.0, "project": "المكتب/الإدارة"}, {"date": "2025-12-31", "description": "م.محمد ابو الجود", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 66000.0, "project": "المكتب/الإدارة"}, {"date": "2026-01-01", "description": "عمل توكيل لانهاء اوراق الشركه", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 1600.0, "project": "المكتب/الإدارة"}, {"date": "2026-01-02", "description": "اوراق الشركه", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 10000.0, "project": "المكتب/الإدارة"}, {"date": "2026-01-03", "description": "الاقرار الضريبى", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 100000.0, "project": "المكتب/الإدارة"}, {"date": "2026-01-04", "description": "ارض الاميريه", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 30000.0, "project": "المكتب/الإدارة"}, {"date": "2026-01-05", "description": "مصاريف الضبعه", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 67000.0, "project": "المكتب/الإدارة"}, {"date": "2026-01-06", "description": "ضبط حساب", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 9675.0, "project": "المكتب/الإدارة"}, {"date": "2025-12-28", "description": "ايجار ستوديو", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 1500.0, "project": "المكتب/الإدارة"}, {"date": "2025-12-29", "description": "ايجار شقة مدينتى", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 2300.0, "project": "المكتب/الإدارة"}, {"date": "2025-12-30", "description": "ايجار + تأمين شقه", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 44000.0, "project": "المكتب/الإدارة"}, {"date": "2025-12-31", "description": "عمولة سمسار الشقه", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 20000.0, "project": "المكتب/الإدارة"}, {"date": "2026-01-01", "description": "احتياجات السكن", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 2000.0, "project": "المكتب/الإدارة"}, {"date": "2026-01-02", "description": "شحن كهرباء", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 500.0, "project": "المكتب/الإدارة"}, {"date": "2026-01-03", "description": "شحن غاز", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 200.0, "project": "المكتب/الإدارة"}, {"date": "2026-01-04", "description": "ايجار شقه", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 50000.0, "project": "المكتب/الإدارة"}, {"date": "2026-01-05", "description": "ايجار شقة دار مصر", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 22000.0, "project": "المكتب/الإدارة"}, {"date": "2026-01-06", "description": "احتياجات السكن", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 1000.0, "project": "المكتب/الإدارة"}, {"date": "2026-01-07", "description": "احتياجات السكن", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 2000.0, "project": "المكتب/الإدارة"}, {"date": "2026-01-08", "description": "باقى ايجار الشقه", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 5000.0, "project": "المكتب/الإدارة"}, {"date": "2026-01-09", "description": "مصاريف سكن", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 1000.0, "project": "المكتب/الإدارة"}, {"date": "2026-01-10", "description": "كالون باب", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 120.0, "project": "المكتب/الإدارة"}, {"date": "2025-12-28", "description": "صيانة عربيه", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 5000.0, "project": "المكتب/الإدارة"}, {"date": "2025-12-29", "description": "بنزين ", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 1500.0, "project": "المكتب/الإدارة"}, {"date": "2025-12-30", "description": "كاوتش عربيه", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 7000.0, "project": "المكتب/الإدارة"}, {"date": "2025-12-31", "description": "تصليح باب العربيه", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 3200.0, "project": "المكتب/الإدارة"}, {"date": "2026-01-01", "description": "صيانة عربيه", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 1000.0, "project": "المكتب/الإدارة"}, {"date": "2026-01-02", "description": "بنزين ", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 600.0, "project": "المكتب/الإدارة"}, {"date": "2026-01-03", "description": "بنزين ", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 800.0, "project": "المكتب/الإدارة"}, {"date": "2026-01-04", "description": "بنزين ", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 1000.0, "project": "المكتب/الإدارة"}, {"date": "2026-01-05", "description": "بنزين ", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 1000.0, "project": "المكتب/الإدارة"}, {"date": "2026-01-06", "description": "بنزين ", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 1160.0, "project": "المكتب/الإدارة"}, {"date": "2026-01-07", "description": "بنزين ", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 1250.0, "project": "المكتب/الإدارة"}, {"date": "2026-01-08", "description": "كشاف للعربيه", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 3200.0, "project": "المكتب/الإدارة"}, {"date": "2026-01-09", "description": "بنزين ", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 1200.0, "project": "المكتب/الإدارة"}, {"date": "2026-01-10", "description": "بنزين ", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 1000.0, "project": "المكتب/الإدارة"}, {"date": "2026-01-11", "description": "بنزين ", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 1200.0, "project": "المكتب/الإدارة"}, {"date": "2026-01-12", "description": "بنزين ", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 500.0, "project": "المكتب/الإدارة"}, {"date": "2026-01-13", "description": "بنزين ", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 600.0, "project": "المكتب/الإدارة"}, {"date": "2026-01-14", "description": "بنزين ", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 940.0, "project": "المكتب/الإدارة"}, {"date": "2026-01-15", "description": "انتقالات شهر 12", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 5000.0, "project": "المكتب/الإدارة"}, {"date": "2026-01-16", "description": "انتقالات شهر 1", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 10000.0, "project": "المكتب/الإدارة"}, {"date": "2026-01-17", "description": "انتقالات شهر 1", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 10000.0, "project": "المكتب/الإدارة"}, {"date": "2026-01-18", "description": "انتقالات شهر 2", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 10000.0, "project": "المكتب/الإدارة"}, {"date": "2026-01-19", "description": "تحويل لمحمد", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 5000.0, "project": "المكتب/الإدارة"}, {"date": "2026-01-20", "description": "بنزين ", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 1000.0, "project": "المكتب/الإدارة"}, {"date": "2026-01-21", "description": "بنزين ", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 1000.0, "project": "المكتب/الإدارة"}, {"date": "2025-12-28", "description": "غداء", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 1400.0, "project": "المكتب/الإدارة"}, {"date": "2025-12-29", "description": "مياه شرب", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 245.0, "project": "المكتب/الإدارة"}, {"date": "2025-12-30", "description": "غداء", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 1200.0, "project": "المكتب/الإدارة"}, {"date": "2025-12-31", "description": "بوفيه", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 1200.0, "project": "المكتب/الإدارة"}, {"date": "2026-01-01", "description": "بوفيه", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 2050.0, "project": "المكتب/الإدارة"}, {"date": "2026-01-02", "description": "بوفيه", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 1400.0, "project": "المكتب/الإدارة"}, {"date": "2026-01-03", "description": "غداء", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 1100.0, "project": "المكتب/الإدارة"}, {"date": "2026-01-04", "description": "حلويات", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 2300.0, "project": "المكتب/الإدارة"}, {"date": "2026-01-05", "description": "بوفيه", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 975.0, "project": "المكتب/الإدارة"}, {"date": "2026-01-06", "description": "بوفيه", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 400.0, "project": "المكتب/الإدارة"}, {"date": "2025-12-28", "description": "محمد عبدالله", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 2000.0, "project": "المكتب/الإدارة"}, {"date": "2025-12-29", "description": "محمد عبدالله", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 1000.0, "project": "المكتب/الإدارة"}, {"date": "2025-12-30", "description": "محمود جمال", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 1000.0, "project": "المكتب/الإدارة"}, {"date": "2025-12-31", "description": "محمد عبدالله", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 10000.0, "project": "المكتب/الإدارة"}, {"date": "2026-01-01", "description": "محمود جمال", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 5000.0, "project": "المكتب/الإدارة"}, {"date": "2026-01-02", "description": "محمد عبدالله", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 13000.0, "project": "المكتب/الإدارة"}, {"date": "2026-01-03", "description": "عامل المكتب", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 500.0, "project": "المكتب/الإدارة"}, {"date": "2026-01-04", "description": "عامل المكتب", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 1000.0, "project": "المكتب/الإدارة"}, {"date": "2026-01-05", "description": "محمود جمال", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 1000.0, "project": "المكتب/الإدارة"}, {"date": "2026-01-06", "description": "مريم - عامله", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 3000.0, "project": "المكتب/الإدارة"}, {"date": "2026-01-06", "description": "اعمال الصحي", "type": "دفعات", "work": "تشطيبات", "account": "انور", "amount": 86900.0, "project": "الاكاديمية"}, {"date": "2026-03-02", "description": "دفعه عمال حفر&نقل", "type": "دفعات", "work": "حفر&نقل", "account": "عبدالله", "amount": 35000.0, "project": "أبو عريضة"}, {"date": "2026-03-02", "description": "حازم", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 500.0, "project": "المكتب/الإدارة"}, {"date": "2026-03-02", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "محمد صلاح", "amount": 200000.0, "project": "الاكاديمية"}, {"date": "2026-03-02", "description": "ايجار شقة 1 شهر مارس 2026", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 22000.0, "project": "المكتب/الإدارة"}, {"date": "2026-03-02", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "رجب", "amount": 15000.0, "project": "الاكاديمية"}, {"date": "2026-03-02", "description": "ايجار شقة رقم 2 شهر فبراير ومارس", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 34000.0, "project": "المكتب/الإدارة"}, {"date": "2026-03-02", "description": "دفعه اعمال تشطيبات", "type": "دفعات", "work": "تشطيبات", "account": "انور", "amount": 25000.0, "project": "الاكاديمية"}, {"date": "2026-03-02", "description": "غسيل سجاد شقة الخولي ", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 1000.0, "project": "المكتب/الإدارة"}, {"date": "2026-03-02", "description": "دفعة اعمال حفر", "type": "دفعات", "work": "حفر", "account": "رجب", "amount": 3000.0, "project": "الاكاديمية"}, {"date": "2026-03-02", "description": "اعمال تكسير خارج الاكاديمية", "type": "دفعات", "work": "تكسير", "account": "أبو رحمة", "amount": 2000.0, "project": "خارج الاكاديمية"}, {"date": "2026-03-03", "description": "سحور السكن", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 400.0, "project": "المكتب/الإدارة"}, {"date": "2026-03-03", "description": "سحور الاكاديمية", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 400.0, "project": "الاكاديمية"}, {"date": "2026-03-03", "description": "اعمال تكسير خارج الاكاديمية", "type": "دفعات", "work": "تكسير", "account": "أبو رحمة", "amount": 4000.0, "project": "خارج الاكاديمية"}, {"date": "2026-03-03", "description": "دفعه اعمال نقل&حفر", "type": "دفعات", "work": "حفر&نقل", "account": "عبدالله", "amount": 100000.0, "project": "أبو عريضة"}, {"date": "2026-03-03", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "محمد صلاح", "amount": 40000.0, "project": "الاكاديمية"}, {"date": "2026-03-03", "description": "حازم", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 250.0, "project": "المكتب/الإدارة"}, {"date": "2026-03-03", "description": "راتب حسن الغفير", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 3000.0, "project": "الاكاديمية"}, {"date": "2026-03-03", "description": "ايجار عربية فيات", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 10000.0, "project": "الاكاديمية"}, {"date": "2026-03-03", "description": "دفعه اعمال حفر", "type": "دفعات", "work": "حفر", "account": "رجب", "amount": 3000.0, "project": "الاكاديمية"}, {"date": "2026-03-04", "description": "بنزين عربية فيات", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 800.0, "project": "المكتب/الإدارة"}, {"date": "2026-03-04", "description": "توريد 5 طن اسمنت مشروع شرق الاكاديمية", "type": "دفعات", "work": "تشطيبات", "account": "انور", "amount": 21500.0, "project": "الاكاديمية"}, {"date": "2026-03-04", "description": "دفعه اعمال تشطيبات شرق الاكاديمية", "type": "دفعات", "work": "تشطيبات", "account": "انور", "amount": 15000.0, "project": "الاكاديمية"}, {"date": "2026-03-05", "description": "دفعه اعمال حفر ونقل عبدالله", "type": "دفعات", "work": "حفر&نقل", "account": "عبدالله", "amount": 200000.0, "project": "أبو عريضة"}, {"date": "2026-03-05", "description": "حاتم", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 1400.0, "project": "المكتب/الإدارة"}, {"date": "2026-03-05", "description": "بنزين عربية اوبل", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 1195.0, "project": "المكتب/الإدارة"}, {"date": "2026-03-05", "description": "نص يومية لودر بالفلات - أبو رحمة", "type": "دفعات", "work": "حفر", "account": "أبو رحمة", "amount": 2000.0, "project": "الاكاديمية"}, {"date": "2026-03-05", "description": "دفعه اعمال حفر بالاكاديمية", "type": "دفعات", "work": "حفر", "account": "رجب", "amount": 10000.0, "project": "الاكاديمية"}, {"date": "2026-03-05", "description": "اعمال بياض عمارات الرحاب", "type": "دفعات", "work": "تشطيبات", "account": "م.أيمن", "amount": 20000.0, "project": "عمارات الرحاب"}, {"date": "2026-03-06", "description": "لوازم مطبخ", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 1000.0, "project": "المكتب/الإدارة"}, {"date": "2026-03-06", "description": "نثريات الإدارة", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 4000.0, "project": "المكتب/الإدارة"}, {"date": "2026-03-06", "description": "دفعه اعمال حفر ونقل عبدالله", "type": "دفعات", "work": "حفر&نقل", "account": "عبدالله", "amount": 120000.0, "project": "أبو عريضة"}, {"date": "2026-03-06", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "محمد صلاح", "amount": 290000.0, "project": "الاكاديمية"}, {"date": "2026-03-07", "description": "ايجار عربية فيات", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 5000.0, "project": "المكتب/الإدارة"}, {"date": "2026-03-07", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "محمد صلاح", "amount": 10000.0, "project": "الاكاديمية"}, {"date": "2026-03-07", "description": "بنزين عربية اوبل", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 1140.0, "project": "المكتب/الإدارة"}, {"date": "2026-03-07", "description": "اعمال الصحي", "type": "دفعات", "work": "تشطيبات", "account": "انور", "amount": 10000.0, "project": "الاكاديمية"}, {"date": "2026-03-08", "description": "لوازم بوفيه الشركة", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 500.0, "project": "المكتب/الإدارة"}, {"date": "2026-03-08", "description": "شحن نت الشركة", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 680.0, "project": "المكتب/الإدارة"}, {"date": "2026-03-08", "description": "دفعه اعمال حفر ونقل عبدالله", "type": "دفعات", "work": "حفر&نقل", "account": "عبدالله", "amount": 100000.0, "project": "أبو عريضة"}, {"date": "2026-03-09", "description": "ايجار عربية فيات", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 3000.0, "project": "المكتب/الإدارة"}, {"date": "2026-03-09", "description": "دفعه اعمال تشطيبات شرق الاكاديمية", "type": "دفعات", "work": "تشطيبات", "account": "انور", "amount": 100000.0, "project": "الاكاديمية"}, {"date": "2026-03-09", "description": "راتب احمد المحجوب", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 5000.0, "project": "المكتب/الإدارة"}, {"date": "2026-03-09", "description": "حاتم", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 1000.0, "project": "المكتب/الإدارة"}, {"date": "2026-03-09", "description": "يومية فيلات الاكاديمية", "type": "دفعات", "work": "حفر", "account": "أبو رحمة", "amount": 1500.0, "project": "الاكاديمية"}, {"date": "2026-03-09", "description": "يومية خارج الاكاديمية", "type": "دفعات", "work": "تكسير", "account": "أبو رحمة", "amount": 1500.0, "project": "خارج الاكاديمية"}, {"date": "2026-03-09", "description": "دفعه اعمال حفر ونقل عبدالله", "type": "دفعات", "work": "حفر&نقل", "account": "عبدالله", "amount": 25000.0, "project": "أبو عريضة"}, {"date": "2026-03-09", "description": "دفعه اعمال حفر ونقل عبدالله", "type": "دفعات", "work": "حفر&نقل", "account": "عبدالله", "amount": 60000.0, "project": "أبو عريضة"}, {"date": "2026-03-09", "description": "نقل مخلفات أبو عريضة قطعة G تحت حساب", "type": "دفعات", "work": "نقل", "account": "مصطفى أبو عريضة", "amount": 40000.0, "project": "أبو عريضة"}, {"date": "2026-03-10", "description": "لوازم بوفيه الشركة", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 1000.0, "project": "المكتب/الإدارة"}, {"date": "2026-03-10", "description": "ناولون 20 طن اسمنت من شركة الهدى", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 800.0, "project": "الاكاديمية"}, {"date": "2026-03-10", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "محمد صلاح", "amount": 30000.0, "project": "الاكاديمية"}, {"date": "2026-03-11", "description": "سحور", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 600.0, "project": "المكتب/الإدارة"}, {"date": "2026-03-11", "description": "دفعه اعمال حفر ونقل عبدالله", "type": "دفعات", "work": "حفر&نقل", "account": "عبدالله", "amount": 50000.0, "project": "أبو عريضة"}, {"date": "2026-03-11", "description": "بنزين عربية اوبل", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 1340.0, "project": "المكتب/الإدارة"}, {"date": "2026-03-11", "description": "ناولون 4 طن حديد 10 مم", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 1520.0, "project": "الاكاديمية"}, {"date": "2026-03-11", "description": "اعمال الصحي", "type": "دفعات", "work": "تشطيبات", "account": "انور", "amount": 30000.0, "project": "الاكاديمية"}, {"date": "2026-03-11", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "محمد صلاح", "amount": 30000.0, "project": "الاكاديمية"}, {"date": "2026-03-11", "description": "نقل مخلفات أبو عريضة", "type": "دفعات", "work": "نقل", "account": "سالم", "amount": 20000.0, "project": "أبو عريضة"}, {"date": "2026-03-11", "description": "نقل مخلفات أبو عريضة", "type": "دفعات", "work": "نقل", "account": "سالم", "amount": -20000.0, "project": "أبو عريضة"}, {"date": "2026-03-11", "description": "نقل مخلفات أبو عريضة", "type": "دفعات", "work": "نقل", "account": "مصطفى أبو عريضة", "amount": 20000.0, "project": "أبو عريضة"}, {"date": "2026-03-12", "description": "دفعه اعمال حفر ونقل عبدالله", "type": "دفعات", "work": "حفر&نقل", "account": "عبدالله", "amount": 50000.0, "project": "أبو عريضة"}, {"date": "2026-03-12", "description": "اعمال الصحي", "type": "دفعات", "work": "تشطيبات", "account": "انور", "amount": 30000.0, "project": "الاكاديمية"}, {"date": "2026-03-13", "description": "نقل مخلفات أبو عريضة", "type": "دفعات", "work": "نقل", "account": "مصطفى أبو عريضة", "amount": 50000.0, "project": "أبو عريضة"}, {"date": "2026-03-13", "description": "نثريات الإدارة", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 5000.0, "project": "المكتب/الإدارة"}, {"date": "2026-03-13", "description": "راتب محمود جمال", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 2500.0, "project": "المكتب/الإدارة"}, {"date": "2026-03-13", "description": "راتب موظف النظافة", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 2500.0, "project": "المكتب/الإدارة"}, {"date": "2026-03-13", "description": "دفعه اعمال نقل", "type": "دفعات", "work": "نقل", "account": "محمد صلاح", "amount": 16000.0, "project": "الاكاديمية"}, {"date": "2026-03-13", "description": "اعمال الصحي", "type": "دفعات", "work": "تشطيبات", "account": "انور", "amount": 10000.0, "project": "الاكاديمية"}, {"date": "2026-03-13", "description": "اعمال الصحي", "type": "دفعات", "work": "تشطيبات", "account": "انور", "amount": 15000.0, "project": "الاكاديمية"}, {"date": "2026-03-13", "description": "يومية فيلات الاكاديمية", "type": "دفعات", "work": "حفر", "account": "أبو رحمة", "amount": 2500.0, "project": "الاكاديمية"}, {"date": "2026-03-13", "description": "يومية خارج الاكاديمية", "type": "دفعات", "work": "تكسير", "account": "أبو رحمة", "amount": 2500.0, "project": "خارج الاكاديمية"}, {"date": "2026-03-14", "description": "غيار زيت عربية اوبل", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 2200.0, "project": "المكتب/الإدارة"}, {"date": "2026-03-14", "description": "اعمال الصحي", "type": "دفعات", "work": "تشطيبات", "account": "انور", "amount": 10000.0, "project": "الاكاديمية"}, {"date": "2026-03-14", "description": "مصروفات نثرية الاكاديمية", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 10000.0, "project": "الاكاديمية"}, {"date": "2026-03-14", "description": "نقل مخلفات تصفية حساب 1100م3*60 & 740م3*95", "type": "دفعات", "work": "نقل", "account": "مصطفى أبو عريضة", "amount": 26300.0, "project": "أبو عريضة"}, {"date": "2026-03-15", "description": "بنزين عربية اوبل", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 1200.0, "project": "المكتب/الإدارة"}, {"date": "2026-03-15", "description": "اعمال الصحي", "type": "دفعات", "work": "تشطيبات", "account": "انور", "amount": 50000.0, "project": "الاكاديمية"}, {"date": "2026-03-15", "description": "دفعه اعمال حفر بالاكاديمية", "type": "دفعات", "work": "حفر", "account": "رجب", "amount": 10000.0, "project": "الاكاديمية"}, {"date": "", "description": "حازم", "type": "مصروفات", "work": "النثريات", "account": "نثريات", "amount": 300.0, "project": "المكتب/الإدارة"}], "top_works": [{"name": "نقل", "amount": 5166528.0}, {"name": "حفر&نقل", "amount": 4764000.0}, {"name": "حفر", "amount": 1400060.0}, {"name": "النثريات", "amount": 1274487.0}, {"name": "تشطيبات", "amount": 1068650.0}, {"name": "تكسير", "amount": 10000.0}], "top_accounts": [{"name": "عبدالله", "amount": 4764000.0}, {"name": "محمد صلاح", "amount": 3521600.0}, {"name": "نثريات", "amount": 1274487.0}, {"name": "انور", "amount": 1269650.0}, {"name": "اكرامي", "amount": 1041216.0}, {"name": "علي يوسف", "amount": 584000.0}, {"name": "أبو رحمة", "amount": 324500.0}, {"name": "رجب", "amount": 293960.0}, {"name": "ماهر", "amount": 167425.0}, {"name": "عماد صفوت", "amount": 154000.0}, {"name": "مصطفى أبو عريضة", "amount": 136300.0}, {"name": "احمد يوسف", "amount": 43412.0}], "subcontracts": [{"from": "2025-12-30", "to": "2026-02-25", "statement": "", "account": "رجب", "rate": 850.0, "unit": "ساعة", "current": 332.0, "total_qty": 332.0, "value": 282200.0, "discount": 0.0, "net": 282200.0}, {"from": "2026-02-28", "to": "2026-03-03", "statement": "", "account": "رجب", "rate": 850.0, "unit": "ساعة", "current": 25.5, "total_qty": 25.5, "value": 21675.0, "discount": 0.0, "net": 21675.0}, {"from": "2025-12-25", "to": "2026-03-11", "statement": "نقل ناتج الحفر خارج الموقع", "account": "محمد صلاح", "rate": 90.0, "unit": "م3", "current": 34720.0, "total_qty": 34720.0, "value": 3124800.0, "discount": 0.0, "net": 3124800.0}, {"from": "2025-12-25", "to": "2026-03-11", "statement": "لودر", "account": "محمد صلاح", "rate": 8000.0, "unit": "يومية", "current": 13.37, "total_qty": 13.37, "value": 106960.0, "discount": 0.0, "net": 106960.0}, {"from": "2025-12-25", "to": "2026-03-11", "statement": "يومية لودر", "account": "محمد صلاح", "rate": 16000.0, "unit": "يومية", "current": 2.0, "total_qty": 2.0, "value": 32000.0, "discount": 0.0, "net": 32000.0}, {"from": "2025-12-25", "to": "2026-03-11", "statement": "لودر (بدء من 2/2/2026)", "account": "محمد صلاح", "rate": 8.0, "unit": "م3", "current": 19800.0, "total_qty": 19800.0, "value": 158400.0, "discount": 0.0, "net": 158400.0}, {"from": "2025-12-25", "to": "2026-03-11", "statement": "يومية اضافية (علاوة - لصالح الجيش )", "account": "محمد صلاح", "rate": 8500.0, "unit": "يومية", "current": 1.0, "total_qty": 1.0, "value": 8500.0, "discount": 0.0, "net": 8500.0}, {"from": "2025-12-25", "to": "2026-03-11", "statement": "رسوم مقلب", "account": "محمد صلاح", "rate": 70.0, "unit": "عدد", "current": 1736.0, "total_qty": 1736.0, "value": 121520.0, "discount": 0.0, "net": 121520.0}, {"from": "2025-12-25", "to": "2026-03-11", "statement": "خصم", "account": "رجب", "rate": 1.0, "unit": "عدد", "current": -890.0, "total_qty": -890.0, "value": -890.0, "discount": 0.0, "net": -890.0}, {"from": "2025-12-25", "to": "2026-03-11", "statement": "خصم مقابل لودر لحساب المقاول", "account": "محمد صلاح", "rate": 12480.0, "unit": "مقطوعية", "current": -1.0, "total_qty": -1.0, "value": -12480.0, "discount": 0.0, "net": -12480.0}, {"from": "2025-12-25", "to": "2026-03-11", "statement": "خصم مقابل لودر لحساب المقاول", "account": "محمد صلاح", "rate": 17120.0, "unit": "مقطوعية", "current": -1.0, "total_qty": -1.0, "value": -17120.0, "discount": 0.0, "net": -17120.0}, {"from": "2026-03-13", "to": "2026-03-13", "statement": "خصم تصفية حساب المقاول محمد صلاح", "account": "محمد صلاح", "rate": 1.0, "unit": "عدد", "current": -980.0, "total_qty": -980.0, "value": -980.0, "discount": 0.0, "net": -980.0}, {"from": "2026-03-09", "to": "2026-03-14", "statement": "نقل مخلفات قطعة G موقع أبو عريضة 1100م3*60ج + 740م3*95ج", "account": "مصطفى أبو عريضة", "rate": 1100.0, "unit": "م3", "current": 60.0, "total_qty": 60.0, "value": 66000.0, "discount": 0.0, "net": 66000.0}, {"from": "2026-03-09", "to": "2026-03-14", "statement": "نقل مخلفات قطعة G موقع أبو عريضة 1100م3*60ج + 740م3*95ج", "account": "مصطفى أبو عريضة", "rate": 740.0, "unit": "م3", "current": 95.0, "total_qty": 95.0, "value": 70300.0, "discount": 0.0, "net": 70300.0}], "materials": {"cement": [{"date": "", "description": "وارد 70 طن اسمنت من الجيش", "amount": 70.0}, {"date": "", "description": "توريد 25 طن اسمنت الي شركة الديب", "amount": -25.0}, {"date": "", "description": "توريد 15 طن اسمنت الي شركة الشرقية", "amount": -15.0}, {"date": "", "description": "توريد 2 طن اسمنت الي شركة ديتيلز", "amount": -2.0}, {"date": "", "description": "وارد 15 طن من شركة العالمية", "amount": 15.0}, {"date": "2026-03-10", "description": "وارد 20 طن اسمنت من شركة الهدى", "amount": 20.0}], "steel": [{"date": "2026-03-11", "description": "وارد 4 طن حديد 10 مم من شركة الشرقية", "amount": 4.0}], "cement_net": 63.0, "steel_net": 4.0}, "housing": {"items": [{"month": "فبراير 2026", "date": "2026-02-28", "description": "عصام", "amount": 34595.0}, {"month": "مارس 2026", "date": "2026-03-01", "description": "عصام", "amount": 2130.0}, {"month": "مارس 2026", "date": "2026-03-01", "description": "عصام", "amount": 180.0}, {"month": "مارس 2026", "date": "2026-03-01", "description": "عصام", "amount": 220.0}, {"month": "مارس 2026", "date": "2026-03-01", "description": "عصام", "amount": 390.0}, {"month": "مارس 2026", "date": "2026-03-07", "description": "محمد ثروت", "amount": 2000.0}, {"month": "مارس 2026", "date": "2026-03-08", "description": "عصام", "amount": 7720.0}, {"month": "مارس 2026", "date": "2026-03-08", "description": "عصام", "amount": 1050.0}], "total": 48285.0}};
+
+const STORAGE_KEY = 'smart_finance_entries_v1';
+const META_KEY = 'smart_finance_meta_v1';
+const USERS_KEY = 'smart_finance_users_v1';
+const SESSION_KEY = 'smart_finance_session_v1';
+const SYNC_SETTINGS_KEY = 'smart_finance_sync_settings_v1';
+
+const TYPES = ['دفعات','مصروفات','إيرادات'];
+const VIEWS = [
+  {id:'dashboard', label:'الرئيسية'},
+  {id:'entry', label:'إدخال البيانات'},
+  {id:'entries', label:'القيود'},
+  {id:'reports', label:'التقارير'},
+  {id:'settings', label:'الإعدادات'},
+  {id:'materials', label:'الخامات'},
+  {id:'housing', label:'السكن'}
+];
+
+function esc(v) {
+  return String(v ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
+}
+function currency(v) {
+  return Number(v || 0).toLocaleString('ar-EG', {maximumFractionDigits:2});
+}
+function dateFmt(v) { return v ? String(v) : '—'; }
+function monthKey(v) { return String(v || '').slice(0,7); }
+function uid() { return 'id_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,8); }
+function setText(id, text) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = text;
+}
+function showMessage(id, text) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = text;
+  el.style.display = 'block';
+  clearTimeout(showMessage._t);
+  showMessage._t = setTimeout(() => el.style.display = 'none', 2400);
+}
+function downloadBlob(filename, content, type) {
+  const blob = new Blob([content], {type});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function defaultUsers() {
+  return [
+    {id:'u1', role:'مدير', username:'admin', pin:'1234', canEdit:true, canSettings:true},
+    {id:'u2', role:'محاسب', username:'accountant', pin:'1234', canEdit:true, canSettings:false}
+  ];
+}
+function loadUsers() {
+  try {
+    const raw = localStorage.getItem(USERS_KEY);
+    const parsed = raw ? JSON.parse(raw) : null;
+    return Array.isArray(parsed) && parsed.length ? parsed : defaultUsers();
+  } catch (e) {
+    return defaultUsers();
+  }
+}
+function saveUsers(users) {
+  localStorage.setItem(USERS_KEY, JSON.stringify(users));
+}
+function loadSession() {
+  try {
+    return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
+  } catch (e) {
+    return null;
+  }
+}
+function saveSession(session) {
+  localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+}
+function logout() {
+  localStorage.removeItem(SESSION_KEY);
+  renderLogin();
+}
+
+function loadEntries() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    return [];
+  }
+}
+function saveEntries(rows) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(rows));
+}
+
+function loadMeta() {
+  try {
+    const raw = localStorage.getItem(META_KEY);
+    const parsed = raw ? JSON.parse(raw) : null;
+    const data = parsed && typeof parsed === 'object' ? parsed : {};
+    return {
+      projects:Array.isArray(data.projects) ? data.projects : [],
+      projectAccounts:data.projectAccounts && typeof data.projectAccounts === 'object' ? data.projectAccounts : {},
+      projectWorks:data.projectWorks && typeof data.projectWorks === 'object' ? data.projectWorks : {}
+    };
+  } catch (e) {
+    return {projects:[], projectAccounts:{}, projectWorks:{}};
+  }
+}
+function saveMeta(meta) {
+  localStorage.setItem(META_KEY, JSON.stringify(meta));
+}
+function uniqueSorted(arr) {
+  return [...new Set((arr || []).map(v => String(v || '').trim()).filter(Boolean))].sort();
+}
+function loadSyncSettings() {
+  try {
+    const raw = localStorage.getItem(SYNC_SETTINGS_KEY);
+    const parsed = raw ? JSON.parse(raw) : {};
+    return {
+      endpoint: parsed.endpoint || '',
+      token: parsed.token || ''
+    };
+  } catch (e) {
+    return {endpoint:'', token:''};
+  }
+}
+function saveSyncSettings(v) {
+  localStorage.setItem(SYNC_SETTINGS_KEY, JSON.stringify(v));
+}
+
+function baseEntries() {
+  return (baseData.entries || []).map((r, i) => ({...r, id:'base_'+i, source:'base'}));
+}
+function localEntries() {
+  return loadEntries().map(r => ({...r, source:'local'}));
+}
+function allEntries() {
+  return [...baseEntries(), ...localEntries()];
+}
+
+function relationsData() {
+  const meta = loadMeta();
+  const projects = new Set((baseData.projects || []).map(x => x.project));
+  meta.projects.forEach(p => projects.add(p));
+  allEntries().forEach(r => projects.add(r.project));
+  const rel = new Map();
+  [...projects].filter(Boolean).forEach(p => rel.set(p, {accounts:new Set(), works:new Set()}));
+  Object.entries(meta.projectAccounts).forEach(([project, accounts]) => {
+    if (!rel.has(project)) rel.set(project, {accounts:new Set(), works:new Set()});
+    (accounts || []).forEach(a => rel.get(project).accounts.add(a));
+  });
+  Object.entries(meta.projectWorks).forEach(([project, works]) => {
+    if (!rel.has(project)) rel.set(project, {accounts:new Set(), works:new Set()});
+    (works || []).forEach(w => rel.get(project).works.add(w));
+  });
+  allEntries().forEach(r => {
+    const p = r.project || 'بدون مشروع';
+    if (!rel.has(p)) rel.set(p, {accounts:new Set(), works:new Set()});
+    if (r.account) rel.get(p).accounts.add(r.account);
+    if (r.work) rel.get(p).works.add(r.work);
+  });
+  return {
+    projects:[...projects].filter(Boolean).sort(),
+    rel
+  };
+}
+
+function state() {
+  const entries = allEntries();
+  const byType = {دفعات:0, مصروفات:0, إيرادات:0};
+  entries.forEach(r => byType[r.type] = (byType[r.type] || 0) + Number(r.amount || 0));
+  const revenue = Number(baseData.overview?.revenue || 0) + byType['إيرادات'];
+  const spent = byType['دفعات'] + byType['مصروفات'];
+
+  const projectMap = new Map();
+  (baseData.projects || []).forEach(p => projectMap.set(p.project, {
+    project:p.project, operations:Number(p.operations || 0), misc:Number(p.misc || 0),
+    revenue:Number(p.revenue || 0), total:Number(p.total || 0), net:Number(p.net || 0)
+  }));
+  localEntries().forEach(r => {
+    const key = r.project || 'بدون مشروع';
+    if (!projectMap.has(key)) projectMap.set(key, {project:key, operations:0, misc:0, revenue:0, total:0, net:0});
+    const p = projectMap.get(key);
+    const amt = Number(r.amount || 0);
+    if (r.type === 'إيرادات') p.revenue += amt;
+    else if (r.type === 'دفعات') p.operations += amt;
+    else p.misc += amt;
+    p.total = p.operations + p.misc;
+    p.net = p.revenue - p.total;
+  });
+
+  const aggregate = (field) => {
+    const map = new Map();
+    entries.forEach(r => {
+      const k = r[field] || 'غير محدد';
+      map.set(k, (map.get(k) || 0) + Number(r.amount || 0));
+    });
+    return [...map.entries()].map(([name, amount]) => ({name, amount})).sort((a,b)=>b.amount-a.amount);
+  };
+
+  const months = new Map();
+  entries.forEach(r => {
+    const m = monthKey(r.date) || 'بدون تاريخ';
+    if (!months.has(m)) months.set(m, {month:m, payments:0, expenses:0, revenue:0, count:0});
+    const row = months.get(m);
+    if (r.type === 'دفعات') row.payments += Number(r.amount || 0);
+    else if (r.type === 'مصروفات') row.expenses += Number(r.amount || 0);
+    else if (r.type === 'إيرادات') row.revenue += Number(r.amount || 0);
+    row.count += 1;
+  });
+  const monthly = [...months.values()].sort((a,b)=>String(b.month).localeCompare(String(a.month))).map(r => ({...r, spent:r.payments+r.expenses, net:r.revenue-(r.payments+r.expenses)}));
+
+  return {
+    entries,
+    revenue,
+    spent,
+    net: revenue - spent,
+    byType,
+    projects:[...projectMap.values()].sort((a,b)=>b.total-a.total),
+    topWorks: aggregate('work').slice(0,8),
+    topAccounts: aggregate('account').slice(0,8),
+    monthly
+  };
+}
+
+function fillSelect(el, options, placeholder, current='') {
+  el.innerHTML = ['<option value="">' + esc(placeholder) + '</option>']
+    .concat((options || []).map(v => `<option value="${esc(v)}" ${String(v)===String(current)?'selected':''}>${esc(v)}</option>`))
+    .join('');
+}
+
+function renderLogin() {
+  document.getElementById('appRoot').style.display = 'none';
+  const root = document.getElementById('loginRoot');
+  root.style.display = '';
+  const users = loadUsers();
+  root.innerHTML = `
+    <div class="login-screen">
+      <h2>تسجيل الدخول</h2>
+      <p class="muted">نسخة احترافية للموبايل مع صلاحيات، تقارير، وشكل تطبيق كامل.</p>
+      <div class="form-grid">
+        <select id="loginUser"></select>
+        <input id="loginPin" type="password" inputmode="numeric" placeholder="PIN">
+      </div>
+      <div class="actions">
+        <button id="loginBtn">دخول</button>
+      </div>
+      <div class="notice small" style="margin-top:12px;">
+        المستخدم الافتراضي: <strong>admin</strong> أو <strong>accountant</strong><br>
+        الرقم السري الافتراضي لكليهما: <strong>1234</strong>
+      </div>
+    </div>
+  `;
+  const sel = document.getElementById('loginUser');
+  fillSelect(sel, users.map(u => u.username + ' — ' + u.role), 'اختر المستخدم');
+  document.getElementById('loginBtn').onclick = () => {
+    const selected = sel.value.split(' — ')[0];
+    const pin = document.getElementById('loginPin').value;
+    const user = users.find(u => u.username === selected && u.pin === pin);
+    if (!user) {
+      alert('بيانات الدخول غير صحيحة.');
+      return;
+    }
+    saveSession(user);
+    renderApp();
+  };
+}
+
+function buildAppShell() {
+  const session = loadSession();
+  const canSettings = !!session?.canSettings;
+  return `
+    <div class="hero">
+      <div class="split">
+        <div>
+          <h1>نظام المحاسبة الذكي</h1>
+          <p>حفظ محلي + وضع تطبيق + تقارير احترافية + مزامنة إنترنت اختيارية عبر Webhook أو Google Apps Script.</p>
+        </div>
+        <div>
+          <span class="pill dark">${esc(session?.role || '')}</span>
+        </div>
+      </div>
+      <div class="top-actions">
+        <button class="secondary" id="installBtn">تثبيت التطبيق</button>
+        <button class="secondary" id="syncNowBtn">مزامنة الآن</button>
+        <button class="ghost" id="logoutBtn">تسجيل الخروج</button>
+      </div>
+      <div class="install-note small muted">ميزة التثبيت تظهر عندما تفتح التطبيق من رابط مستضاف على الإنترنت.</div>
+    </div>
+
+    <div class="tabs" id="tabs"></div>
+
+    <section class="view active" id="dashboard"></section>
+    <section class="view" id="entry"></section>
+    <section class="view" id="entries"></section>
+    <section class="view" id="reports"></section>
+    <section class="view" id="settings"></section>
+    <section class="view" id="materials"></section>
+    <section class="view" id="housing"></section>
+
+    <div class="footer">نسخة احترافية كاملة • تاريخ التوليد 2026-03-27</div>
+  `;
+}
+
+function renderApp() {
+  const session = loadSession();
+  if (!session) {
+    renderLogin();
+    return;
+  }
+  document.getElementById('loginRoot').style.display = 'none';
+  const root = document.getElementById('appRoot');
+  root.style.display = '';
+  root.innerHTML = buildAppShell();
+  initTabs();
+  renderDashboard();
+  renderEntry();
+  renderEntriesView();
+  renderReports();
+  renderSettings();
+  renderMaterials();
+  renderHousing();
+
+  document.getElementById('logoutBtn').onclick = logout;
+  document.getElementById('syncNowBtn').onclick = syncNow;
+  document.getElementById('installBtn').onclick = () => {
+    alert('عند رفع التطبيق على استضافة مثل Netlify أو Vercel وفتحه من Safari/Chrome ستظهر لك إضافة إلى الشاشة الرئيسية.');
+  };
+}
+
+function initTabs() {
+  const session = loadSession();
+  const tabs = document.getElementById('tabs');
+  tabs.innerHTML = '';
+  VIEWS.filter(v => session?.canSettings || v.id !== 'settings').forEach((v, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'tab' + (i === 0 ? ' active' : '');
+    btn.textContent = v.label;
+    btn.onclick = () => {
+      document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+      document.querySelectorAll('.view').forEach(x => x.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(v.id).classList.add('active');
+    };
+    tabs.appendChild(btn);
+  });
+}
+
+function renderDashboard() {
+  const s = state();
+  document.getElementById('dashboard').innerHTML = `
+    <div class="grid cards">
+      <div class="card metric"><div class="label">إجمالي المنصرف</div><div class="value">${currency(s.spent)} ج.م</div></div>
+      <div class="card metric"><div class="label">إجمالي الإيرادات</div><div class="value">${currency(s.revenue)} ج.م</div></div>
+      <div class="card metric ${s.net>=0?'good':'bad'}"><div class="label">الصافي</div><div class="value">${currency(s.net)} ج.م</div></div>
+      <div class="card metric"><div class="label">القيود الكلية</div><div class="value">${s.entries.length}</div></div>
+    </div>
+
+    <div class="grid two" style="margin-top:14px;">
+      <div class="card">
+        <div class="section-title">أفضل المشروعات</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>المشروع</th><th>المنصرف</th><th>الإيراد</th><th>الصافي</th></tr></thead>
+            <tbody>
+              ${s.projects.map(p => `
+                <tr>
+                  <td><span class="pill">${esc(p.project)}</span></td>
+                  <td>${currency(p.total)}</td>
+                  <td>${currency(p.revenue)}</td>
+                  <td style="color:${p.net>=0?'var(--good)':'var(--bad)'};font-weight:900">${currency(p.net)}</td>
+                </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-title">اتجاه الصافي الشهري</div>
+        <div class="svg-chart">${monthlyLineSvg(s.monthly.slice().reverse())}</div>
+      </div>
+    </div>
+  `;
+}
+
+function monthlyLineSvg(rows) {
+  if (!rows.length) return '<div class="empty">لا توجد بيانات كافية للرسم.</div>';
+  const width = 680, height = 240, pad = 34;
+  const vals = rows.map(r => Number(r.net || 0));
+  const min = Math.min(...vals, 0), max = Math.max(...vals, 1);
+  const span = max - min || 1;
+  const x = i => pad + (i * (width - pad * 2) / Math.max(rows.length - 1, 1));
+  const y = v => height - pad - ((v - min) * (height - pad * 2) / span);
+  const pts = rows.map((r, i) => `${x(i)},${y(r.net)}`).join(' ');
+  const labels = rows.map((r, i) => `<text x="${x(i)}" y="${height-10}" text-anchor="middle" font-size="10" fill="#64748b">${esc(r.month)}</text>`).join('');
+  const dots = rows.map((r, i) => `<circle cx="${x(i)}" cy="${y(r.net)}" r="4" fill="#155eef"></circle>`).join('');
+  return `
+    <svg viewBox="0 0 ${width} ${height}" width="100%" height="220" aria-label="صافي شهري">
+      <line x1="${pad}" y1="${y(0)}" x2="${width-pad}" y2="${y(0)}" stroke="#e2e8f0" stroke-dasharray="4 4"></line>
+      <polyline fill="none" stroke="#155eef" stroke-width="3" points="${pts}"></polyline>
+      ${dots}
+      ${labels}
+      <text x="${pad}" y="18" fill="#64748b" font-size="12">صافي شهري</text>
+    </svg>
+  `;
+}
+
+function renderEntry() {
+  const session = loadSession();
+  const editable = !!session?.canEdit;
+  const {projects, rel} = relationsData();
+  const html = `
+    <div class="card">
+      <div class="section-title">إضافة / تعديل قيد</div>
+      <div class="notice">القوائم مرتبطة بالمشروع. يمكنك أيضًا إضافة مشروع أو حساب أو نوع أعمال جديد من نفس الشاشة.</div>
+      <form id="entryForm">
+        <input type="hidden" id="editingId">
+        <div class="form-grid">
+          <input type="date" id="fDate" ${editable?'':'disabled'} required>
+          <select id="fType" ${editable?'':'disabled'} required></select>
+          <select id="fProject" ${editable?'':'disabled'} required></select>
+          <select id="fWork" ${editable?'':'disabled'} required></select>
+          <select id="fAccount" ${editable?'':'disabled'} required></select>
+          <input id="fAmount" type="number" step="0.01" placeholder="القيمة" ${editable?'':'disabled'} required>
+        </div>
+        <div class="form-grid">
+          <textarea id="fDescription" placeholder="البيان / الملاحظات" ${editable?'':'disabled'} required></textarea>
+        </div>
+        <div class="actions" style="margin-bottom:8px;">
+          <button type="button" class="secondary" id="addProjectBtn" ${editable?'':'disabled'}>إضافة مشروع</button>
+          <button type="button" class="secondary" id="addAccountBtn" ${editable?'':'disabled'}>إضافة حساب</button>
+          <button type="button" class="secondary" id="addWorkBtn" ${editable?'':'disabled'}>إضافة نوع أعمال</button>
+        </div>
+        <div class="actions">
+          <button type="submit" id="saveEntryBtn" ${editable?'':'disabled'}>حفظ القيد</button>
+          <button type="button" class="ghost" id="resetEntryBtn" ${editable?'':'disabled'}>تفريغ</button>
+        </div>
+      </form>
+      <div class="success" id="entryMsg"></div>
+    </div>
+
+    <div class="card" style="margin-top:14px;">
+      <div class="section-title">القيود المضافة</div>
+      <div class="table-wrap" id="localEntriesTableWrap"></div>
+    </div>
+  `;
+  document.getElementById('entry').innerHTML = html;
+
+  const t = document.getElementById('fType');
+  const p = document.getElementById('fProject');
+  const w = document.getElementById('fWork');
+  const a = document.getElementById('fAccount');
+  fillSelect(t, TYPES, 'نوع الحركة');
+  fillSelect(p, projects, 'اختر المشروع');
+
+  function updateDeps(keepWork='', keepAccount='') {
+    const pr = p.value;
+    const row = rel.get(pr) || {accounts:new Set(), works:new Set()};
+    fillSelect(w, [...row.works].sort(), 'اختر نوع الأعمال', keepWork);
+    fillSelect(a, [...row.accounts].sort(), 'اختر الحساب', keepAccount);
+  }
+  p.onchange = () => updateDeps();
+
+  document.getElementById('entryForm').onsubmit = ev => {
+    ev.preventDefault();
+    const rows = loadEntries();
+    const item = {
+      id: document.getElementById('editingId').value || uid(),
+      date: document.getElementById('fDate').value,
+      type: t.value,
+      project: p.value,
+      work: w.value,
+      account: a.value,
+      amount: Number(document.getElementById('fAmount').value || 0),
+      description: document.getElementById('fDescription').value.trim()
+    };
+    if (!item.date || !item.type || !item.project || !item.work || !item.account || !item.description) {
+      alert('أكمل الحقول أولًا.');
+      return;
+    }
+    const idx = rows.findIndex(x => x.id === item.id);
+    if (idx >= 0) rows[idx] = item; else rows.push(item);
+    saveEntries(rows);
+    renderApp();
+    showMessage('entryMsg', idx >= 0 ? 'تم تعديل القيد.' : 'تم حفظ القيد.');
+  };
+  document.getElementById('resetEntryBtn').onclick = () => renderEntry();
+
+  document.getElementById('addProjectBtn').onclick = () => {
+    const name = prompt('اسم المشروع الجديد');
+    if (!name) return;
+    const meta = loadMeta();
+    meta.projects = uniqueSorted([...(meta.projects || []), name]);
+    saveMeta(meta);
+    renderApp();
+  };
+  document.getElementById('addAccountBtn').onclick = () => {
+    const project = p.value;
+    if (!project) return alert('اختر المشروع أولًا.');
+    const name = prompt('اسم الحساب / المقاول الجديد');
+    if (!name) return;
+    const meta = loadMeta();
+    meta.projects = uniqueSorted([...(meta.projects || []), project]);
+    meta.projectAccounts[project] = uniqueSorted([...(meta.projectAccounts[project] || []), name]);
+    saveMeta(meta);
+    renderApp();
+  };
+  document.getElementById('addWorkBtn').onclick = () => {
+    const project = p.value;
+    if (!project) return alert('اختر المشروع أولًا.');
+    const name = prompt('اسم نوع الأعمال الجديد');
+    if (!name) return;
+    const meta = loadMeta();
+    meta.projects = uniqueSorted([...(meta.projects || []), project]);
+    meta.projectWorks[project] = uniqueSorted([...(meta.projectWorks[project] || []), name]);
+    saveMeta(meta);
+    renderApp();
+  };
+
+  const rows = loadEntries().sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+  document.getElementById('localEntriesTableWrap').innerHTML = rows.length ? `
+    <table>
+      <thead><tr><th>التاريخ</th><th>البيان</th><th>النوع</th><th>الأعمال</th><th>الحساب</th><th>المشروع</th><th>القيمة</th><th>إجراءات</th></tr></thead>
+      <tbody>
+        ${rows.map(r => `
+          <tr>
+            <td>${dateFmt(r.date)}</td>
+            <td>${esc(r.description)}</td>
+            <td>${esc(r.type)}</td>
+            <td>${esc(r.work)}</td>
+            <td>${esc(r.account)}</td>
+            <td>${esc(r.project)}</td>
+            <td>${currency(r.amount)}</td>
+            <td>
+              <div class="actions">
+                <button class="secondary" ${editable?'':'disabled'} onclick="editEntry('${esc(r.id)}')">تعديل</button>
+                <button class="danger" ${editable?'':'disabled'} onclick="removeEntry('${esc(r.id)}')">حذف</button>
+              </div>
+            </td>
+          </tr>`).join('')}
+      </tbody>
+    </table>
+  ` : '<div class="empty">لا توجد قيود مضافة.</div>';
+
+  window.editEntry = function(id) {
+    const row = loadEntries().find(x => x.id === id);
+    if (!row) return;
+    document.getElementById('editingId').value = row.id;
+    document.getElementById('fDate').value = row.date || '';
+    t.value = row.type || '';
+    p.value = row.project || '';
+    updateDeps(row.work || '', row.account || '');
+    document.getElementById('fAmount').value = row.amount || '';
+    document.getElementById('fDescription').value = row.description || '';
+  };
+  window.removeEntry = function(id) {
+    if (!confirm('حذف هذا القيد؟')) return;
+    saveEntries(loadEntries().filter(x => x.id !== id));
+    renderApp();
+  };
+}
+
+function filteredEntries() {
+  const q = (document.getElementById('qSearch')?.value || '').trim().toLowerCase();
+  const p = document.getElementById('filterProject')?.value || '';
+  const a = document.getElementById('filterAccount')?.value || '';
+  const t = document.getElementById('filterType')?.value || '';
+  const m = document.getElementById('filterMonth')?.value || '';
+  return allEntries().filter(r => {
+    const text = [r.description, r.account, r.work, r.project, r.type].join(' ').toLowerCase();
+    return (!q || text.includes(q))
+      && (!p || r.project === p)
+      && (!a || r.account === a)
+      && (!t || r.type === t)
+      && (!m || monthKey(r.date) === m);
+  });
+}
+
+function renderEntriesView() {
+  const rows = allEntries();
+  const projects = [...new Set(rows.map(x => x.project).filter(Boolean))];
+  const accounts = [...new Set(rows.map(x => x.account).filter(Boolean))];
+  const months = [...new Set(rows.map(x => monthKey(x.date)).filter(Boolean))].sort().reverse();
+
+  document.getElementById('entries').innerHTML = `
+    <div class="card">
+      <div class="section-title">القيود اليومية</div>
+      <div class="toolbar">
+        <input id="qSearch" placeholder="بحث">
+        <select id="filterProject"></select>
+        <select id="filterAccount"></select>
+        <select id="filterType"></select>
+        <select id="filterMonth"></select>
+        <button id="exportCsvBtn">CSV</button>
+      </div>
+      <div class="table-wrap" id="entriesTableWrap"></div>
+    </div>
+  `;
+  fillSelect(document.getElementById('filterProject'), projects, 'كل المشروعات');
+  fillSelect(document.getElementById('filterAccount'), accounts, 'كل الحسابات');
+  fillSelect(document.getElementById('filterType'), TYPES, 'كل الأنواع');
+  fillSelect(document.getElementById('filterMonth'), months, 'كل الشهور');
+
+  function draw() {
+    const fr = filteredEntries().sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+    const total = fr.reduce((s,r)=>s+Number(r.amount || 0),0);
+    document.getElementById('entriesTableWrap').innerHTML = `
+      <table>
+        <thead><tr><th>التاريخ</th><th>البيان</th><th>النوع</th><th>الأعمال</th><th>الحساب</th><th>المشروع</th><th>القيمة</th><th>المصدر</th></tr></thead>
+        <tbody>
+          <tr style="background:#f8fbff;font-weight:900"><td colspan="6">إجمالي الفلترة</td><td>${currency(total)}</td><td>${fr.length}</td></tr>
+          ${fr.map(r => `
+            <tr>
+              <td>${dateFmt(r.date)}</td>
+              <td>${esc(r.description)}</td>
+              <td>${esc(r.type)}</td>
+              <td>${esc(r.work)}</td>
+              <td>${esc(r.account)}</td>
+              <td>${esc(r.project)}</td>
+              <td>${currency(r.amount)}</td>
+              <td><span class="pill ${r.source==='local'?'good':'warn'}">${r.source==='local'?'مضاف':'أساسي'}</span></td>
+            </tr>`).join('')}
+        </tbody>
+      </table>
+    `;
+  }
+  ['qSearch','filterProject','filterAccount','filterType','filterMonth'].forEach(id => {
+    document.getElementById(id).oninput = draw;
+    document.getElementById(id).onchange = draw;
+  });
+  document.getElementById('exportCsvBtn').onclick = () => {
+    const fr = filteredEntries();
+    const header = ['date','description','type','work','account','project','amount','source'];
+    const csv = [header.join(','), ...fr.map(r => header.map(h => `"${String(r[h] ?? '').replaceAll('"','""')}"`).join(','))].join('\n');
+    downloadBlob('filtered-entries.csv', csv, 'text/csv;charset=utf-8;');
+  };
+  draw();
+}
+
+function reportCardsHtml(s) {
+  const latest = s.monthly[0] || {month:'—', net:0};
+  const best = s.monthly.slice().sort((a,b)=>b.net-a.net)[0] || latest;
+  return `
+    <div class="grid cards">
+      <div class="card metric"><div class="label">عدد الشهور</div><div class="value">${s.monthly.length}</div></div>
+      <div class="card metric"><div class="label">آخر شهر</div><div class="value">${esc(latest.month)}</div></div>
+      <div class="card metric ${latest.net>=0?'good':'bad'}"><div class="label">صافي آخر شهر</div><div class="value">${currency(latest.net)} ج.م</div></div>
+      <div class="card metric good"><div class="label">أفضل شهر</div><div class="value">${esc(best.month)}</div></div>
+    </div>
+  `;
+}
+
+function renderReports() {
+  const s = state();
+  document.getElementById('reports').innerHTML = `
+    ${reportCardsHtml(s)}
+    <div class="grid two" style="margin-top:14px;">
+      <div class="card">
+        <div class="section-title">تقرير شهري</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>الشهر</th><th>دفعات</th><th>مصروفات</th><th>إيرادات</th><th>إجمالي المنصرف</th><th>الصافي</th><th>عدد الحركات</th></tr></thead>
+            <tbody>
+              ${s.monthly.map(r => `
+                <tr>
+                  <td><span class="pill">${esc(r.month)}</span></td>
+                  <td>${currency(r.payments)}</td>
+                  <td>${currency(r.expenses)}</td>
+                  <td>${currency(r.revenue)}</td>
+                  <td>${currency(r.spent)}</td>
+                  <td style="color:${r.net>=0?'var(--good)':'var(--bad)'};font-weight:900">${currency(r.net)}</td>
+                  <td>${r.count}</td>
+                </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-title">توزيع أنواع الحركات</div>
+        <div class="svg-chart">${donutSvg(s.byType)}</div>
+      </div>
+    </div>
+  `;
+}
+
+function donutSvg(obj) {
+  const values = [obj['دفعات']||0, obj['مصروفات']||0, obj['إيرادات']||0];
+  const labels = ['دفعات','مصروفات','إيرادات'];
+  const colors = ['#155eef','#f59e0b','#16a34a'];
+  const total = values.reduce((a,b)=>a+b,0) || 1;
+  let start = 0;
+  const cx = 120, cy = 120, r = 70;
+  const arcs = values.map((v, i) => {
+    const angle = (v / total) * Math.PI * 2;
+    const end = start + angle;
+    const x1 = cx + r * Math.cos(start - Math.PI/2), y1 = cy + r * Math.sin(start - Math.PI/2);
+    const x2 = cx + r * Math.cos(end - Math.PI/2), y2 = cy + r * Math.sin(end - Math.PI/2);
+    const large = angle > Math.PI ? 1 : 0;
+    const d = `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2} Z`;
+    start = end;
+    return `<path d="${d}" fill="${colors[i]}"></path>`;
+  }).join('');
+  const legend = labels.map((l,i)=>`<div class="split small"><span>${l}</span><span>${currency(values[i])}</span></div>`).join('');
+  return `
+    <div class="split">
+      <svg viewBox="0 0 240 240" width="220" height="220">
+        ${arcs}
+        <circle cx="120" cy="120" r="36" fill="#fff"></circle>
+      </svg>
+      <div style="min-width:160px;">${legend}</div>
+    </div>`;
+}
+
+function renderSettings() {
+  const session = loadSession();
+  if (!session?.canSettings) {
+    document.getElementById('settings').innerHTML = '<div class="card"><div class="empty">غير متاح.</div></div>';
+    return;
+  }
+  const sync = loadSyncSettings();
+  const users = loadUsers();
+  document.getElementById('settings').innerHTML = `
+    <div class="grid two">
+      <div class="card">
+        <div class="section-title">مزامنة الإنترنت</div>
+        <div class="notice small">هذه النسخة فيها مزامنة جاهزة، لكن تحتاج أن تضع رابط API أو Google Apps Script Web App خاص بك. عند الضغط على مزامنة الآن سيتم إرسال البيانات بصيغة JSON.</div>
+        <div class="form-grid">
+          <input id="syncEndpoint" value="${esc(sync.endpoint)}" placeholder="رابط المزامنة">
+          <input id="syncToken" value="${esc(sync.token)}" placeholder="Token اختياري">
+        </div>
+        <div class="actions">
+          <button id="saveSyncSettingsBtn">حفظ إعدادات المزامنة</button>
+          <button class="secondary" id="exportBackupBtn">نسخة احتياطية JSON</button>
+          <label class="btn secondary">استيراد نسخة<input type="file" id="importBackupInput" accept=".json" hidden></label>
+        </div>
+        <div class="success" id="settingsMsg"></div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">المستخدمون والصلاحيات</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>اسم المستخدم</th><th>الدور</th><th>PIN</th><th>الصلاحيات</th></tr></thead>
+            <tbody>
+              ${users.map(u => `
+                <tr>
+                  <td>${esc(u.username)}</td>
+                  <td>${esc(u.role)}</td>
+                  <td>${esc(u.pin)}</td>
+                  <td>${u.canSettings ? 'كاملة' : 'تشغيل فقط'}</td>
+                </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  `;
+  document.getElementById('saveSyncSettingsBtn').onclick = () => {
+    saveSyncSettings({
+      endpoint: document.getElementById('syncEndpoint').value.trim(),
+      token: document.getElementById('syncToken').value.trim()
+    });
+    showMessage('settingsMsg', 'تم حفظ إعدادات المزامنة.');
+  };
+  document.getElementById('exportBackupBtn').onclick = () => {
+    const payload = {
+      entries: loadEntries(),
+      meta: loadMeta(),
+      users: loadUsers(),
+      sync: loadSyncSettings()
+    };
+    downloadBlob('smart-finance-backup.json', JSON.stringify(payload, null, 2), 'application/json;charset=utf-8;');
+  };
+  document.getElementById('importBackupInput').onchange = ev => {
+    const file = ev.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const data = JSON.parse(reader.result);
+        if (Array.isArray(data.entries)) saveEntries(data.entries);
+        if (data.meta) saveMeta(data.meta);
+        if (Array.isArray(data.users)) saveUsers(data.users);
+        if (data.sync) saveSyncSettings(data.sync);
+        renderApp();
+      } catch (e) {
+        alert('ملف النسخة الاحتياطية غير صالح.');
+      }
+    };
+    reader.readAsText(file, 'utf-8');
+  };
+}
+
+async function syncNow() {
+  const sync = loadSyncSettings();
+  if (!sync.endpoint) {
+    alert('أدخل رابط المزامنة أولًا من الإعدادات.');
+    return;
+  }
+  const payload = {
+    app:'smart-finance',
+    sent_at:new Date().toISOString(),
+    entries:loadEntries(),
+    meta:loadMeta()
+  };
+  try {
+    const res = await fetch(sync.endpoint, {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        ...(sync.token ? {'Authorization':'Bearer ' + sync.token} : {})
+      },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    alert('تمت المزامنة بنجاح.');
+  } catch (e) {
+    alert('فشلت المزامنة. تأكد من رابط API.\n' + e.message);
+  }
+}
+
+function renderMaterials() {
+  document.getElementById('materials').innerHTML = `
+    <div class="grid cards">
+      <div class="card metric"><div class="label">صافي الأسمنت</div><div class="value">${currency(baseData.materials?.cement_net)} طن</div></div>
+      <div class="card metric"><div class="label">صافي الحديد</div><div class="value">${currency(baseData.materials?.steel_net)} طن</div></div>
+    </div>
+    <div class="grid two" style="margin-top:14px;">
+      <div class="card">
+        <div class="section-title">حركة الأسمنت</div>
+        <div class="table-wrap">${simpleTable(baseData.materials?.cement || [])}</div>
+      </div>
+      <div class="card">
+        <div class="section-title">حركة الحديد</div>
+        <div class="table-wrap">${simpleTable(baseData.materials?.steel || [])}</div>
+      </div>
+    </div>
+  `;
+}
+function renderHousing() {
+  document.getElementById('housing').innerHTML = `
+    <div class="grid cards">
+      <div class="card metric"><div class="label">إجمالي السكن</div><div class="value">${currency(baseData.housing?.total)} ج.م</div></div>
+    </div>
+    <div class="card" style="margin-top:14px;">
+      <div class="section-title">تفاصيل السكن</div>
+      <div class="table-wrap">${simpleTable(baseData.housing?.items || [])}</div>
+    </div>
+  `;
+}
+function simpleTable(rows) {
+  if (!rows.length) return '<div class="empty">لا توجد بيانات.</div>';
+  const cols = Object.keys(rows[0]);
+  return `
+    <table>
+      <thead><tr>${cols.map(c=>`<th>${esc(c)}</th>`).join('')}</tr></thead>
+      <tbody>${rows.map(r=>`<tr>${cols.map(c=>`<td>${esc(r[c])}</td>`).join('')}</tr>`).join('')}</tbody>
+    </table>
+  `;
+}
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
+
+const session = loadSession();
+if (session) renderApp(); else renderLogin();
+</script>
+</body>
+</html>
